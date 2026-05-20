@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+:root {
+  --bg-base: #05050a;
+  --bg-panel: #0d0d16;
+  --bg-elevated: #151522;
+  --text-primary: #f7f7ff;
+  --text-secondary: #a8a8bd;
+  --magenta: #ff00d4;
+  --violet: #6b2cff;
+  --cyan: #00d9ff;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-default: rgba(255, 255, 255, 0.09);
+  --gradient-main: linear-gradient(90deg, #ff00d4 0%, #6b2cff 45%, #00d9ff 100%);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-rajdhani, 'Rajdhani'), -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-orbitron, 'Orbitron'), sans-serif;
+  letter-spacing: 0.02em;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-panel); }
+::-webkit-scrollbar-thumb { background: rgba(107, 44, 255, 0.45); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(107, 44, 255, 0.7); }
+
+/* Selection */
+::selection { background: rgba(107, 44, 255, 0.35); color: #f7f7ff; }
+
+/* Gradient text */
+.gradient-text {
+  background: var(--gradient-main);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gradient button */
+.btn-gradient {
+  background: linear-gradient(90deg, #ff00d4 0%, #6b2cff 45%, #00d9ff 100%);
+  background-size: 200% auto;
+  color: #fff;
+  transition: box-shadow 0.25s ease, opacity 0.2s ease;
+}
+.btn-gradient:hover:not(:disabled) {
+  box-shadow: 0 0 22px rgba(107, 44, 255, 0.4);
+  opacity: 0.92;
+}
+
+/* Neon card */
+.card-neon {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+}
+
+/* Dark form elements */
+select option {
+  background: #0d0d16;
+  color: #f7f7ff;
+}
+
+input[type="date"],
+input[type="time"],
+input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+/* Nav active bar */
+.nav-active {
+  background: rgba(107, 44, 255, 0.12);
+  border-left: 2px solid #6b2cff;
+  color: #f7f7ff;
+}
