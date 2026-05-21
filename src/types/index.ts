@@ -82,6 +82,8 @@ export interface SaleItem {
 export interface Sale {
   id: string
   ownerId: string
+  clientId?: string
+  clientName?: string
   items: SaleItem[]
   total: number
   paymentMethod: 'dinheiro' | 'pix' | 'cartao_debito' | 'cartao_credito' | 'outro'

@@ -27,10 +27,9 @@ export default function CadastroPage() {
       toast.success('Conta criada com sucesso!')
       router.replace('/dashboard')
     } catch (err: any) {
-      const msg =
-        err.code === 'auth/email-already-in-use'
-          ? 'Este e-mail já está cadastrado'
-          : 'Erro ao criar conta. Tente novamente.'
+      const msg = err.message?.includes('already registered') || err.message?.includes('already been registered')
+        ? 'Este e-mail já está cadastrado'
+        : 'Erro ao criar conta. Tente novamente.'
       toast.error(msg)
     } finally {
       setLoading(false)

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Badge, statusBadge } from '@/components/ui/Badge'
 import { Client, Booking } from '@/types'
-import { Users, Phone, Calendar, Search, Edit, History, MessageCircle } from 'lucide-react'
+import { Users, Phone, Calendar, Search, Edit, History, MessageCircle, UserPlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -26,8 +26,14 @@ function openWhatsApp(phone: string) {
 
 export default function ClientesPage() {
   const { user } = useAuth()
-  const { clients, loading, updateClient } = useClients()
+  const { clients, loading, updateClient, addClient } = useClients()
   const [search, setSearch] = useState('')
+
+  const [newModal, setNewModal] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newPhone, setNewPhone] = useState('')
+  const [newNotes, setNewNotes] = useState('')
+  const [newSaving, setNewSaving] = useState(false)
 
   const [editModal, setEditModal] = useState<Client | null>(null)
   const [editNotes, setEditNotes] = useState('')
@@ -43,6 +49,24 @@ export default function ClientesPage() {
     const q = search.toLowerCase()
     return c.name.toLowerCase().includes(q) || c.phone.includes(q)
   })
+
+  async function handleNewClient() {
+    if (!newName.trim()) return toast.error('Informe o nome')
+    if (!newPhone.trim()) return toast.error('Informe o telefone')
+    setNewSaving(true)
+    try {
+      await addClient(newName.trim(), newPhone.trim(), newNotes.trim())
+      toast.success('Cliente cadastrado!')
+      setNewModal(false)
+      setNewName('')
+      setNewPhone('')
+      setNewNotes('')
+    } catch {
+      toast.error('Erro ao cadastrar cliente')
+    } finally {
+      setNewSaving(false)
+    }
+  }
 
   function openEdit(client: Client) {
     setEditModal(client)
@@ -113,6 +137,9 @@ export default function ClientesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
           <p className="text-sm text-gray-500 mt-0.5">{clients.length} cliente{clients.length !== 1 ? 's' : ''}</p>
         </div>
+        <Button onClick={() => setNewModal(true)}>
+          <UserPlus size={16} className="mr-2" /> Novo Cliente
+        </Button>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 p-3 mb-4 flex items-center gap-2">
@@ -243,6 +270,35 @@ export default function ClientesPage() {
           <div className="flex gap-3">
             <Button onClick={handleSave} loading={saving} className="flex-1">Salvar</Button>
             <Button variant="secondary" onClick={() => setEditModal(null)} className="flex-1">Cancelar</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal novo cliente */}
+      <Modal open={newModal} onClose={() => setNewModal(false)} title="Novo Cliente">
+        <div className="space-y-4">
+          <Input
+            label="Nome completo"
+            value={newName}
+            onChange={e => setNewName(e.target.value)}
+            placeholder="Ex: João Júnior"
+          />
+          <Input
+            label="Telefone / WhatsApp"
+            value={newPhone}
+            onChange={e => setNewPhone(e.target.value)}
+            placeholder="Ex: (11) 99999-9999"
+            type="tel"
+          />
+          <Textarea
+            label="Observações (opcional)"
+            value={newNotes}
+            onChange={e => setNewNotes(e.target.value)}
+            placeholder="Ex: cliente preferencial, mensalista..."
+          />
+          <div className="flex gap-3">
+            <Button onClick={handleNewClient} loading={newSaving} className="flex-1">Cadastrar</Button>
+            <Button variant="secondary" onClick={() => setNewModal(false)} className="flex-1">Cancelar</Button>
           </div>
         </div>
       </Modal>

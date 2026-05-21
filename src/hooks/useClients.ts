@@ -83,5 +83,22 @@ export function useClients() {
     await load()
   }
 
-  return { clients, loading, upsertClient, updateClient }
+  async function addClient(name: string, phone: string, notes: string) {
+    if (!user) return null
+    const { data: created } = await supabase
+      .from('clients')
+      .insert({
+        owner_id: user.id,
+        name,
+        phone,
+        notes,
+        total_bookings: 0,
+      })
+      .select('id')
+      .single()
+    await load()
+    return created?.id as string
+  }
+
+  return { clients, loading, upsertClient, updateClient, addClient }
 }

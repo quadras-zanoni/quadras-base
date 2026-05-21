@@ -8,6 +8,8 @@ function mapSale(row: Record<string, unknown>): Sale {
   return {
     id: row.id as string,
     ownerId: row.owner_id as string,
+    clientId: row.client_id as string | undefined,
+    clientName: row.client_name as string | undefined,
     items: row.items as SaleItem[],
     total: row.total as number,
     paymentMethod: row.payment_method as Sale['paymentMethod'],
@@ -38,13 +40,17 @@ export function useSales() {
     items: SaleItem[],
     products: Product[],
     paymentMethod: Sale['paymentMethod'],
-    notes?: string
+    notes?: string,
+    clientId?: string,
+    clientName?: string
   ) {
     if (!user) return
     const total = items.reduce((sum, item) => sum + item.total, 0)
 
     await supabase.from('sales').insert({
       owner_id: user.id,
+      client_id: clientId ?? null,
+      client_name: clientName ?? null,
       items,
       total,
       payment_method: paymentMethod,

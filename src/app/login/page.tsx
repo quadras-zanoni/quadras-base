@@ -25,10 +25,11 @@ export default function LoginPage() {
       await login(email, password)
       router.replace('/dashboard')
     } catch (err: any) {
-      const msg =
-        err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found'
-          ? 'E-mail ou senha incorretos'
-          : 'Erro ao fazer login. Tente novamente.'
+      const msg = err.message?.includes('Email not confirmed')
+        ? 'Confirme seu e-mail antes de entrar (verifique sua caixa de entrada)'
+        : err.message?.includes('Invalid login credentials') || err.message?.includes('invalid_credentials')
+        ? 'E-mail ou senha incorretos'
+        : 'Erro ao fazer login. Tente novamente.'
       toast.error(msg)
     } finally {
       setLoading(false)

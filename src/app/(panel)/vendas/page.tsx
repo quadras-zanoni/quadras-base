@@ -3,12 +3,13 @@
 import { useState } from 'react'
 import { useSales } from '@/hooks/useSales'
 import { useProducts } from '@/hooks/useProducts'
+import { useClients } from '@/hooks/useClients'
 import { Button } from '@/components/ui/Button'
 import { Input, Select, Textarea } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
 import { SaleItem, Sale, PAYMENT_METHODS } from '@/types'
-import { ShoppingCart, Plus, Trash2, Receipt, Wallet } from 'lucide-react'
+import { ShoppingCart, Plus, Trash2, Receipt, Wallet, User } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -28,6 +29,7 @@ const paymentBadge: Record<Sale['paymentMethod'], { label: string; color: 'green
 export default function VendasPage() {
   const { sales, loading, registerSale, todaySales, todayRevenue } = useSales()
   const { products } = useProducts()
+  const { clients } = useClients()
 
   const [modal, setModal] = useState(false)
   const [items, setItems] = useState<SaleItem[]>([])
@@ -36,9 +38,21 @@ export default function VendasPage() {
   const [saving, setSaving] = useState(false)
   const [selectedProductId, setSelectedProductId] = useState('')
   const [qty, setQty] = useState(1)
+  const [selectedClientId, setSelectedClientId] = useState('')
 
   const activeProducts = products.filter(p => p.status === 'ativo')
   const total = items.reduce((sum, i) => sum + i.total, 0)
+  const selectedClient = clients.find(c => c.id === selectedClientId)
+
+  function openModal() {
+    setItems([])
+    setNotes('')
+    setPaymentMethod('pix')
+    setSelectedProductId('')
+    setSelectedClientId('')
+    setQty(1)
+    setModal(true)
+  }
 
   function addItem() {
     const product = products.find(p => p.id === selectedProductId)
@@ -79,12 +93,16 @@ export default function VendasPage() {
     if (items.length === 0) return toast.error('Adicione pelo menos um produto')
     setSaving(true)
     try {
-      await registerSale(items, products, paymentMethod, notes)
+      await registerSale(
+        items,
+        products,
+        paymentMethod,
+        notes,
+        selectedClientId || undefined,
+        selectedClient?.name || undefined
+      )
       toast.success('Venda registrada!')
       setModal(false)
-      setItems([])
-      setNotes('')
-      setPaymentMethod('pix')
     } catch {
       toast.error('Erro ao registrar venda')
     } finally {
@@ -101,9 +119,7 @@ export default function VendasPage() {
             Hoje: {todaySales.length} venda{todaySales.length !== 1 ? 's' : ''} · {fmt(todayRevenue)}
           </p>
         </div>
-        <Button onClick={() => { setItems([]); setNotes(''); setPaymentMethod('pix'); setModal(true) }}>
-          + Nova Venda
-        </Button>
+        <Button onClick={openModal}>+ Nova Venda</Button>
       </div>
 
       {loading ? (
@@ -114,12 +130,12 @@ export default function VendasPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
           <ShoppingCart size={40} className="mx-auto mb-3 opacity-30" />
           <p className="text-lg mb-2">Nenhuma venda registrada</p>
-          <Button onClick={() => setModal(true)}>Registrar venda</Button>
+          <Button onClick={openModal}>Registrar venda</Button>
         </div>
       ) : (
         <div className="space-y-3">
           {sales.map(sale => {
-            const date = sale.createdAt ? (sale.createdAt as any).toDate?.() : null
+            const date = sale.createdAt ? new Date(sale.createdAt) : null
             const pm = paymentBadge[sale.paymentMethod] ?? paymentBadge.outro
             return (
               <div key={sale.id} className="bg-white rounded-xl border border-gray-200 p-4">
@@ -130,6 +146,11 @@ export default function VendasPage() {
                       {date ? format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : '–'}
                     </span>
                     <Badge variant={pm.color}>{pm.label}</Badge>
+                    {sale.clientName && (
+                      <span className="flex items-center gap-1 text-xs text-gray-500">
+                        <User size={11} /> {sale.clientName}
+                      </span>
+                    )}
                   </div>
                   <span className="font-bold text-gray-900 text-lg">{fmt(sale.total)}</span>
                 </div>
@@ -152,21 +173,23 @@ export default function VendasPage() {
 
       <Modal open={modal} onClose={() => setModal(false)} title="Nova Venda" size="lg">
         <div className="space-y-4">
-          <div className="bg-gray-50 rounded-lg p-3">
-            <p className="text-sm font-medium text-gray-700 mb-2">Adicionar produto</p>
+          {/* Adicionar produto */}
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#a8a8bd] mb-2">Adicionar produto</p>
             <div className="flex gap-2">
-              <select
-                value={selectedProductId}
-                onChange={e => setSelectedProductId(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
-              >
-                <option value="">Selecione...</option>
-                {activeProducts.map(p => (
-                  <option key={p.id} value={p.id} disabled={p.quantity === 0}>
-                    {p.name} ({fmt(p.salePrice)}) – {p.quantity} em estoque
-                  </option>
-                ))}
-              </select>
+              <div className="flex-1">
+                <Select
+                  value={selectedProductId}
+                  onChange={e => setSelectedProductId(e.target.value)}
+                >
+                  <option value="">Selecione...</option>
+                  {activeProducts.map(p => (
+                    <option key={p.id} value={p.id} disabled={p.quantity === 0}>
+                      {p.name} ({fmt(p.salePrice)}) – {p.quantity} em estoque
+                    </option>
+                  ))}
+                </Select>
+              </div>
               <Input
                 type="number"
                 min="1"
@@ -180,28 +203,41 @@ export default function VendasPage() {
             </div>
           </div>
 
+          {/* Lista de itens */}
           {items.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-4">Nenhum item adicionado</p>
+            <p className="text-sm text-[#a8a8bd] text-center py-4">Nenhum item adicionado</p>
           ) : (
             <div className="space-y-2">
               {items.map(item => (
-                <div key={item.productId} className="flex items-center gap-3 bg-white border border-gray-200 rounded-lg px-3 py-2">
+                <div key={item.productId} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{item.productName}</p>
-                    <p className="text-xs text-gray-400">{item.quantity}x {fmt(item.unitPrice)}</p>
+                    <p className="text-sm font-medium text-[#f7f7ff]">{item.productName}</p>
+                    <p className="text-xs text-[#a8a8bd]">{item.quantity}x {fmt(item.unitPrice)}</p>
                   </div>
-                  <span className="font-semibold text-gray-900">{fmt(item.total)}</span>
-                  <button onClick={() => removeItem(item.productId)} className="text-gray-400 hover:text-red-500 transition-colors">
+                  <span className="font-semibold text-[#f7f7ff]">{fmt(item.total)}</span>
+                  <button onClick={() => removeItem(item.productId)} className="text-[#a8a8bd] hover:text-red-400 transition-colors">
                     <Trash2 size={15} />
                   </button>
                 </div>
               ))}
-              <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                <span className="font-semibold text-gray-700">Total</span>
-                <span className="text-xl font-bold text-green-600">{fmt(total)}</span>
+              <div className="flex justify-between items-center pt-2 border-t border-white/10">
+                <span className="font-semibold text-[#a8a8bd]">Total</span>
+                <span className="text-xl font-bold text-green-400">{fmt(total)}</span>
               </div>
             </div>
           )}
+
+          {/* Cliente (opcional) */}
+          <Select
+            label="Cliente (opcional)"
+            value={selectedClientId}
+            onChange={e => setSelectedClientId(e.target.value)}
+          >
+            <option value="">Sem cliente vinculado</option>
+            {clients.map(c => (
+              <option key={c.id} value={c.id}>{c.name} – {c.phone}</option>
+            ))}
+          </Select>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Select
