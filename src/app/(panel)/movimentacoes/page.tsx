@@ -82,7 +82,7 @@ export default function MovimentacoesPage() {
           {movements.map(m => {
             const cfg = typeConfig[m.type]
             const Icon = cfg.icon
-            const date = m.createdAt ? (m.createdAt as any).toDate() : null
+            const date = m.createdAt ? new Date(m.createdAt) : null
             return (
               <div key={m.id} className="flex items-center gap-4 px-4 py-3">
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
