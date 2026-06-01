@@ -1,7 +1,24 @@
+import { redirect } from 'next/navigation'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { AuthGuard } from '@/components/layout/AuthGuard'
 
-export default function PanelLayout({ children }: { children: React.ReactNode }) {
+export default async function PanelLayout({ children }: { children: React.ReactNode }) {
+  const billingHubUrl = process.env.BILLING_HUB_URL
+  const tenantKey = process.env.BILLING_TENANT_KEY
+
+  if (billingHubUrl && tenantKey) {
+    try {
+      const res = await fetch(
+        `${billingHubUrl}/api/subscription/check?tenant_key=${tenantKey}`,
+        { next: { revalidate: 300 } }
+      )
+      const data = await res.json()
+      if (!data.active) redirect('/subscription')
+    } catch {
+      // billing hub indisponível — acesso liberado (fail open)
+    }
+  }
+
   return (
     <AuthGuard>
       <div className="flex min-h-screen" style={{ background: '#05050a' }}>
