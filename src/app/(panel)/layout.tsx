@@ -6,6 +6,10 @@ export default async function PanelLayout({ children }: { children: React.ReactN
   const billingHubUrl = process.env.BILLING_HUB_URL
   const tenantKey = process.env.BILLING_TENANT_KEY
 
+  // fail open: só bloqueia se o billing-hub responder explicitamente que está inativo.
+  // O redirect() PRECISA ficar fora do try/catch — no Next ele funciona lançando
+  // a exceção NEXT_REDIRECT, que um catch genérico engoliria silenciosamente.
+  let active = true
   if (billingHubUrl && tenantKey) {
     try {
       const res = await fetch(
@@ -13,11 +17,13 @@ export default async function PanelLayout({ children }: { children: React.ReactN
         { next: { revalidate: 300 } }
       )
       const data = await res.json()
-      if (!data.active) redirect('/subscription')
+      active = data.active !== false
     } catch {
       // billing hub indisponível — acesso liberado (fail open)
+      active = true
     }
   }
+  if (!active) redirect('/subscription')
 
   return (
     <AuthGuard>
