@@ -24,11 +24,12 @@ export function useClients() {
 
   const load = useCallback(async () => {
     if (!user) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('clients')
       .select('*')
       .eq('owner_id', user.id)
       .order('name')
+    if (error) console.error('[useClients] load:', error)
     setClients((data || []).map(mapClient))
     setLoading(false)
   }, [user])
@@ -46,16 +47,17 @@ export function useClients() {
       .single()
 
     if (existing) {
-      await supabase.from('clients').update({
+      const { error } = await supabase.from('clients').update({
         name,
         last_booking_date: bookingDate,
         total_bookings: (existing.total_bookings || 0) + 1,
         updated_at: new Date().toISOString(),
       }).eq('id', existing.id)
+      if (error) throw error
       await load()
       return existing.id as string
     } else {
-      const { data: created } = await supabase
+      const { data: created, error } = await supabase
         .from('clients')
         .insert({
           owner_id: user.id,
@@ -67,6 +69,7 @@ export function useClients() {
         })
         .select('id')
         .single()
+      if (error) throw error
       await load()
       return created?.id as string
     }
@@ -79,13 +82,14 @@ export function useClients() {
     if (data.notes !== undefined) patch.notes = data.notes
     if (data.lastBookingDate !== undefined) patch.last_booking_date = data.lastBookingDate
     if (data.totalBookings !== undefined) patch.total_bookings = data.totalBookings
-    await supabase.from('clients').update(patch).eq('id', id)
+    const { error } = await supabase.from('clients').update(patch).eq('id', id)
+    if (error) throw error
     await load()
   }
 
   async function addClient(name: string, phone: string, notes: string) {
     if (!user) return null
-    const { data: created } = await supabase
+    const { data: created, error } = await supabase
       .from('clients')
       .insert({
         owner_id: user.id,
@@ -96,6 +100,7 @@ export function useClients() {
       })
       .select('id')
       .single()
+    if (error) throw error
     await load()
     return created?.id as string
   }

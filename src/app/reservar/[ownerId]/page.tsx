@@ -138,7 +138,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
       }
 
       const value = selectedCourt.pricePerHour * (selectedCourt.duration / 60)
-      await supabase.from('bookings').insert({
+      const { error } = await supabase.from('bookings').insert({
         owner_id:     ownerId,
         court_id:     selectedCourt.id,
         court_name:   selectedCourt.name,
@@ -151,6 +151,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
         value,
         status: 'pendente',
       })
+      if (error) throw error
       setSuccess(true)
     } catch (err) {
       console.error(err)

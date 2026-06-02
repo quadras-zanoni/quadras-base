@@ -44,7 +44,8 @@ export function useBookings(dateFilter?: string) {
       q = q.order('date', { ascending: false })
     }
 
-    const { data } = await q
+    const { data, error } = await q
+    if (error) console.error('[useBookings] load:', error)
     setBookings((data || []).map(mapBooking))
     setLoading(false)
   }, [user, dateFilter])
@@ -53,7 +54,7 @@ export function useBookings(dateFilter?: string) {
 
   async function addBooking(data: Omit<Booking, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>) {
     if (!user) return
-    const { data: result } = await supabase
+    const { data: result, error } = await supabase
       .from('bookings')
       .insert({
         owner_id: user.id,
@@ -71,6 +72,7 @@ export function useBookings(dateFilter?: string) {
       })
       .select('id')
       .single()
+    if (error) throw error
     await load()
     return result?.id
   }
@@ -89,27 +91,30 @@ export function useBookings(dateFilter?: string) {
     if (data.value !== undefined) patch.value = data.value
     if (data.status !== undefined) patch.status = data.status
     if (data.cancelReason !== undefined) patch.cancel_reason = data.cancelReason
-    await supabase.from('bookings').update(patch).eq('id', id)
+    const { error } = await supabase.from('bookings').update(patch).eq('id', id)
+    if (error) throw error
     await load()
   }
 
   async function cancelBooking(id: string, reason: string) {
-    await supabase.from('bookings').update({
+    const { error } = await supabase.from('bookings').update({
       status: 'cancelado',
       cancel_reason: reason,
       cancelled_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }).eq('id', id)
+    if (error) throw error
     await load()
   }
 
   async function checkAvailability(courtId: string, date: string, startTime: string, endTime: string, excludeId?: string) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('bookings')
       .select('*')
       .eq('owner_id', user!.id)
       .eq('court_id', courtId)
       .eq('date', date)
+    if (error) throw error
 
     const active = (data || [])
       .map(mapBooking)

@@ -25,11 +25,12 @@ export function useSales() {
 
   const load = useCallback(async () => {
     if (!user) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('sales')
       .select('*')
       .eq('owner_id', user.id)
       .order('created_at', { ascending: false })
+    if (error) console.error('[useSales] load:', error)
     setSales((data || []).map(mapSale))
     setLoading(false)
   }, [user])
@@ -47,7 +48,7 @@ export function useSales() {
     if (!user) return
     const total = items.reduce((sum, item) => sum + item.total, 0)
 
-    await supabase.from('sales').insert({
+    const { error: saleError } = await supabase.from('sales').insert({
       owner_id: user.id,
       client_id: clientId ?? null,
       client_name: clientName ?? null,
@@ -56,18 +57,20 @@ export function useSales() {
       payment_method: paymentMethod,
       notes: notes || '',
     })
+    if (saleError) throw saleError
 
     for (const item of items) {
       const product = products.find(p => p.id === item.productId)
       if (!product) continue
       const newQty = product.quantity - item.quantity
 
-      await supabase.from('products').update({
+      const { error: prodError } = await supabase.from('products').update({
         quantity: newQty,
         updated_at: new Date().toISOString(),
       }).eq('id', item.productId)
+      if (prodError) throw prodError
 
-      await supabase.from('stock_movements').insert({
+      const { error: movError } = await supabase.from('stock_movements').insert({
         owner_id: user.id,
         product_id: item.productId,
         product_name: item.productName,
@@ -77,6 +80,7 @@ export function useSales() {
         previous_quantity: product.quantity,
         new_quantity: newQty,
       })
+      if (movError) throw movError
     }
 
     await load()

@@ -26,11 +26,12 @@ export function useProducts() {
 
   const load = useCallback(async () => {
     if (!user) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('owner_id', user.id)
       .order('name')
+    if (error) console.error('[useProducts] load:', error)
     setProducts((data || []).map(mapProduct))
     setLoading(false)
   }, [user])
@@ -39,7 +40,7 @@ export function useProducts() {
 
   async function addProduct(data: Omit<Product, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>) {
     if (!user) return
-    await supabase.from('products').insert({
+    const { error } = await supabase.from('products').insert({
       owner_id: user.id,
       name: data.name,
       category: data.category,
@@ -49,6 +50,7 @@ export function useProducts() {
       cost_price: data.costPrice,
       status: data.status,
     })
+    if (error) throw error
     await load()
   }
 
@@ -61,7 +63,8 @@ export function useProducts() {
     if (data.salePrice !== undefined) patch.sale_price = data.salePrice
     if (data.costPrice !== undefined) patch.cost_price = data.costPrice
     if (data.status !== undefined) patch.status = data.status
-    await supabase.from('products').update(patch).eq('id', id)
+    const { error } = await supabase.from('products').update(patch).eq('id', id)
+    if (error) throw error
     await load()
   }
 

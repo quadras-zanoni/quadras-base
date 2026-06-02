@@ -26,11 +26,12 @@ export function useCourts() {
 
   const load = useCallback(async () => {
     if (!user) return
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('courts')
       .select('*')
       .eq('owner_id', user.id)
       .order('name')
+    if (error) console.error('[useCourts] load:', error)
     setCourts((data || []).map(mapCourt))
     setLoading(false)
   }, [user])
@@ -39,7 +40,7 @@ export function useCourts() {
 
   async function addCourt(data: Omit<Court, 'id' | 'ownerId' | 'createdAt' | 'updatedAt'>) {
     if (!user) return
-    await supabase.from('courts').insert({
+    const { error } = await supabase.from('courts').insert({
       owner_id: user.id,
       name: data.name,
       type: data.type,
@@ -49,6 +50,7 @@ export function useCourts() {
       close_time: data.closeTime,
       status: data.status,
     })
+    if (error) throw error
     await load()
   }
 
@@ -61,7 +63,8 @@ export function useCourts() {
     if (data.openTime !== undefined) patch.open_time = data.openTime
     if (data.closeTime !== undefined) patch.close_time = data.closeTime
     if (data.status !== undefined) patch.status = data.status
-    await supabase.from('courts').update(patch).eq('id', id)
+    const { error } = await supabase.from('courts').update(patch).eq('id', id)
+    if (error) throw error
     await load()
   }
 
