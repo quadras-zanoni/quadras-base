@@ -5,14 +5,15 @@ import { useSales } from '@/hooks/useSales'
 import { useProducts } from '@/hooks/useProducts'
 import { useClients } from '@/hooks/useClients'
 import { Button } from '@/components/ui/Button'
-import { Input, Select, Textarea } from '@/components/ui/Input'
+import { Select, Textarea } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
-import { SaleItem, Sale, PAYMENT_METHODS } from '@/types'
-import { ShoppingCart, Plus, Trash2, Receipt, Wallet, User } from 'lucide-react'
+import { SaleItem, Sale, Product, PAYMENT_METHODS } from '@/types'
+import { ShoppingCart, Plus, Minus, Trash2, Receipt, Wallet, User } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { clsx } from 'clsx'
 
 function fmt(val: number) {
   return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -36,8 +37,6 @@ export default function VendasPage() {
   const [notes, setNotes] = useState('')
   const [paymentMethod, setPaymentMethod] = useState<Sale['paymentMethod']>('pix')
   const [saving, setSaving] = useState(false)
-  const [selectedProductId, setSelectedProductId] = useState('')
-  const [qty, setQty] = useState(1)
   const [selectedClientId, setSelectedClientId] = useState('')
 
   const activeProducts = products.filter(p => p.status === 'ativo')
@@ -48,41 +47,34 @@ export default function VendasPage() {
     setItems([])
     setNotes('')
     setPaymentMethod('pix')
-    setSelectedProductId('')
     setSelectedClientId('')
-    setQty(1)
     setModal(true)
   }
 
-  function addItem() {
-    const product = products.find(p => p.id === selectedProductId)
-    if (!product) return toast.error('Selecione um produto')
-    if (qty <= 0) return toast.error('Quantidade inválida')
+  // Clicar no produto adiciona 1 (ou incrementa), respeitando o estoque
+  function addProduct(p: Product) {
+    if (p.quantity === 0) return
+    setItems(prev => {
+      const ex = prev.find(i => i.productId === p.id)
+      if (ex) {
+        if (ex.quantity >= p.quantity) { toast.error(`Só há ${p.quantity} em estoque`); return prev }
+        return prev.map(i => i.productId === p.id
+          ? { ...i, quantity: i.quantity + 1, total: (i.quantity + 1) * i.unitPrice }
+          : i)
+      }
+      return [...prev, { productId: p.id, productName: p.name, quantity: 1, unitPrice: p.salePrice, total: p.salePrice }]
+    })
+  }
 
-    const existing = items.find(i => i.productId === selectedProductId)
-    const totalQty = (existing?.quantity || 0) + qty
-
-    if (totalQty > product.quantity) {
-      return toast.error(`Estoque insuficiente. Disponível: ${product.quantity}`)
-    }
-
-    if (existing) {
-      setItems(prev => prev.map(i =>
-        i.productId === selectedProductId
-          ? { ...i, quantity: i.quantity + qty, total: (i.quantity + qty) * i.unitPrice }
-          : i
-      ))
-    } else {
-      setItems(prev => [...prev, {
-        productId: product.id,
-        productName: product.name,
-        quantity: qty,
-        unitPrice: product.salePrice,
-        total: qty * product.salePrice,
-      }])
-    }
-    setSelectedProductId('')
-    setQty(1)
+  function changeQty(productId: string, delta: number) {
+    setItems(prev => prev.map(i => {
+      if (i.productId !== productId) return i
+      const max = products.find(p => p.id === productId)?.quantity ?? i.quantity
+      const q = i.quantity + delta
+      if (q < 1) return i
+      if (q > max) { toast.error(`Só há ${max} em estoque`); return i }
+      return { ...i, quantity: q, total: q * i.unitPrice }
+    }))
   }
 
   function removeItem(productId: string) {
@@ -102,8 +94,8 @@ export default function VendasPage() {
       )
       toast.success('Venda registrada!')
       setModal(false)
-    } catch {
-      toast.error('Erro ao registrar venda')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao registrar venda')
     } finally {
       setSaving(false)
     }
@@ -177,57 +169,80 @@ export default function VendasPage() {
       )}
 
       <Modal open={modal} onClose={() => setModal(false)} title="Nova Venda" size="lg">
-        <div className="space-y-4">
-          {/* Adicionar produto */}
+        <div className="space-y-5">
+          {/* Produtos — clique para adicionar */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted mb-2">Adicionar produto</p>
-            <div className="flex gap-2">
-              <div className="flex-1">
-                <Select
-                  value={selectedProductId}
-                  onChange={e => setSelectedProductId(e.target.value)}
-                >
-                  <option value="">Selecione...</option>
-                  {activeProducts.map(p => (
-                    <option key={p.id} value={p.id} disabled={p.quantity === 0}>
-                      {p.name} ({fmt(p.salePrice)}) – {p.quantity} em estoque
-                    </option>
-                  ))}
-                </Select>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted mb-2">
+              Produtos <span className="normal-case font-normal text-subtle tracking-normal">· toque para adicionar</span>
+            </p>
+            {activeProducts.length === 0 ? (
+              <p className="text-sm text-muted py-4 text-center">Nenhum produto cadastrado.</p>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {activeProducts.map(p => {
+                  const inCart = items.find(i => i.productId === p.id)
+                  const out = p.quantity === 0
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      disabled={out}
+                      onClick={() => addProduct(p)}
+                      className={clsx(
+                        'relative text-left p-3 rounded-[var(--radius-ctl)] border transition-colors',
+                        out
+                          ? 'border-line bg-surface-2 opacity-60 cursor-not-allowed'
+                          : inCart
+                          ? 'border-brand bg-brand-weak'
+                          : 'border-line bg-surface hover:border-brand hover:bg-brand-weak/50'
+                      )}
+                    >
+                      {inCart && (
+                        <span className="absolute top-1.5 right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-brand text-white text-[11px] font-bold flex items-center justify-center">
+                          {inCart.quantity}
+                        </span>
+                      )}
+                      <p className="text-sm font-semibold text-ink truncate pr-6">{p.name}</p>
+                      <p className="text-sm font-bold text-brand mt-0.5">{fmt(p.salePrice)}</p>
+                      <p className="text-[11px] text-subtle mt-0.5">{out ? 'Esgotado' : `${p.quantity} em estoque`}</p>
+                    </button>
+                  )
+                })}
               </div>
-              <Input
-                type="number"
-                min="1"
-                value={qty}
-                onChange={e => setQty(Number(e.target.value))}
-                className="w-20"
-              />
-              <Button onClick={addItem} variant="secondary">
-                <Plus size={16} />
-              </Button>
-            </div>
+            )}
           </div>
 
-          {/* Lista de itens */}
-          {items.length === 0 ? (
-            <p className="text-sm text-muted text-center py-4">Nenhum item adicionado</p>
-          ) : (
-            <div className="space-y-2">
-              {items.map(item => (
-                <div key={item.productId} className="flex items-center gap-3 bg-surface-2 border border-line rounded-[var(--radius-ctl)] px-3 py-2">
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-ink">{item.productName}</p>
-                    <p className="text-xs text-muted">{item.quantity}x {fmt(item.unitPrice)}</p>
+          {/* Carrinho */}
+          {items.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted mb-2">Carrinho</p>
+              <div className="space-y-2">
+                {items.map(item => (
+                  <div key={item.productId} className="flex items-center gap-3 bg-surface-2 border border-line rounded-[var(--radius-ctl)] px-3 py-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-ink truncate">{item.productName}</p>
+                      <p className="text-xs text-muted">{fmt(item.unitPrice)} cada</p>
+                    </div>
+                    {/* Stepper de quantidade */}
+                    <div className="flex items-center border border-line rounded-[var(--radius-ctl)] bg-surface shrink-0">
+                      <button type="button" onClick={() => changeQty(item.productId, -1)} className="px-2 py-1.5 text-muted hover:text-ink disabled:opacity-40" disabled={item.quantity <= 1}>
+                        <Minus size={14} />
+                      </button>
+                      <span className="w-8 text-center text-sm font-semibold text-ink">{item.quantity}</span>
+                      <button type="button" onClick={() => changeQty(item.productId, 1)} className="px-2 py-1.5 text-muted hover:text-ink">
+                        <Plus size={14} />
+                      </button>
+                    </div>
+                    <span className="w-20 text-right text-sm font-semibold text-ink shrink-0">{fmt(item.total)}</span>
+                    <button type="button" onClick={() => removeItem(item.productId)} className="text-muted hover:text-danger transition-colors shrink-0">
+                      <Trash2 size={15} />
+                    </button>
                   </div>
-                  <span className="font-semibold text-ink">{fmt(item.total)}</span>
-                  <button onClick={() => removeItem(item.productId)} className="text-muted hover:text-danger transition-colors">
-                    <Trash2 size={15} />
-                  </button>
+                ))}
+                <div className="flex justify-between items-center pt-2 border-t border-line">
+                  <span className="font-semibold text-muted">Total</span>
+                  <span className="text-xl font-bold text-success">{fmt(total)}</span>
                 </div>
-              ))}
-              <div className="flex justify-between items-center pt-2 border-t border-line">
-                <span className="font-semibold text-muted">Total</span>
-                <span className="text-xl font-bold text-success">{fmt(total)}</span>
               </div>
             </div>
           )}
