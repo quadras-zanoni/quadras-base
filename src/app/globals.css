@@ -1,93 +1,91 @@
 @import "tailwindcss";
 
-:root {
-  --bg-base: #05050a;
-  --bg-panel: #0d0d16;
-  --bg-elevated: #151522;
-  --text-primary: #f7f7ff;
-  --text-secondary: #a8a8bd;
-  --magenta: #ff00d4;
-  --violet: #6b2cff;
-  --cyan: #00d9ff;
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-default: rgba(255, 255, 255, 0.09);
-  --gradient-main: linear-gradient(90deg, #ff00d4 0%, #6b2cff 45%, #00d9ff 100%);
+/* ============================================================
+   Design System — Quadras (clean/claro)
+   Tokens via @theme do Tailwind v4 → geram utilitários
+   (bg-surface, text-ink, border-line, bg-brand, etc.)
+   O bloco .dark abaixo já deixa o toggle claro/escuro pronto:
+   basta adicionar class="dark" no <html> no futuro.
+   ============================================================ */
+
+@theme {
+  /* superfícies */
+  --color-canvas: #f6f7f9;     /* fundo da página */
+  --color-surface: #ffffff;    /* cards */
+  --color-surface-2: #f1f3f5;  /* insets, hover, trilhas */
+  --color-line: #e8ebed;       /* bordas */
+
+  /* texto */
+  --color-ink: #1e293b;        /* primário */
+  --color-muted: #64748b;      /* secundário */
+  --color-subtle: #94a3b8;     /* terciário */
+
+  /* marca + ação */
+  --color-brand: #14b8a6;      /* teal — marca, item de menu ativo */
+  --color-brand-weak: #e6f7f4; /* fundo do item ativo */
+  --color-primary: #7c3aed;    /* violeta — ação principal */
+  --color-primary-hover: #6d28d9;
+
+  /* semânticas */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+  --color-violet: #8b5cf6;
+
+  /* tipografia */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* raios */
+  --radius-card: 12px;
+  --radius-ctl: 8px;
 }
 
-*, *::before, *::after {
-  box-sizing: border-box;
+/* Tema escuro — PREPARADO, não ativo (sem class .dark no html ainda).
+   Quando o toggle for ligado, estes valores entram automaticamente. */
+.dark {
+  --color-canvas: #0b0f14;
+  --color-surface: #151b23;
+  --color-surface-2: #1c232c;
+  --color-line: #263039;
+  --color-ink: #e8edf2;
+  --color-muted: #94a3b8;
+  --color-subtle: #64748b;
+  --color-brand-weak: rgba(20, 184, 166, 0.12);
 }
 
-html {
-  scroll-behavior: smooth;
-}
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--bg-base);
-  color: var(--text-primary);
-  font-family: var(--font-rajdhani, 'Rajdhani'), -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 15px;
-  line-height: 1.6;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6, .font-heading {
-  font-family: var(--font-orbitron, 'Orbitron'), sans-serif;
-  letter-spacing: 0.02em;
+/* Scrollbar discreta */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 999px;
+  border: 3px solid var(--color-canvas);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-subtle); }
+
+::selection { background: rgba(20, 184, 166, 0.18); color: var(--color-ink); }
+
+/* Sombra padrão de card (usar via shadow-card) */
+@utility shadow-card {
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06);
 }
 
-/* Scrollbar */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--bg-panel); }
-::-webkit-scrollbar-thumb { background: rgba(107, 44, 255, 0.45); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(107, 44, 255, 0.7); }
-
-/* Selection */
-::selection { background: rgba(107, 44, 255, 0.35); color: #f7f7ff; }
-
-/* Gradient text */
-.gradient-text {
-  background: var(--gradient-main);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Gradient button */
-.btn-gradient {
-  background: linear-gradient(90deg, #ff00d4 0%, #6b2cff 45%, #00d9ff 100%);
-  background-size: 200% auto;
-  color: #fff;
-  transition: box-shadow 0.25s ease, opacity 0.2s ease;
-}
-.btn-gradient:hover:not(:disabled) {
-  box-shadow: 0 0 22px rgba(107, 44, 255, 0.4);
-  opacity: 0.92;
-}
-
-/* Neon card */
-.card-neon {
-  background: var(--bg-panel);
-  border: 1px solid var(--border-default);
-  border-radius: 8px;
-}
-
-/* Dark form elements */
-select option {
-  background: #0d0d16;
-  color: #f7f7ff;
-}
-
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"] {
-  color-scheme: dark;
-}
-
-/* Nav active bar */
-.nav-active {
-  background: rgba(107, 44, 255, 0.12);
-  border-left: 2px solid #6b2cff;
-  color: #f7f7ff;
+/* date/time inputs seguem o tema claro */
+input[type="date"], input[type="time"], input[type="datetime-local"] {
+  color-scheme: light;
 }

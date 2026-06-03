@@ -1,6 +1,16 @@
 import { InputHTMLAttributes, forwardRef } from 'react'
 import { clsx } from 'clsx'
 
+const fieldBase =
+  'w-full px-3 py-2.5 rounded-[var(--radius-ctl)] text-sm text-ink bg-surface border transition-colors focus:outline-none focus:ring-2'
+
+const fieldState = (error?: string) =>
+  error
+    ? 'border-danger/60 focus:border-danger focus:ring-danger/20'
+    : 'border-line focus:border-brand focus:ring-brand/20'
+
+const labelCls = 'block text-[13px] font-medium text-ink mb-1.5'
+
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string
   error?: string
@@ -9,24 +19,13 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, className, ...props }, ref) => (
     <div className="w-full">
-      {label && (
-        <label className="block text-xs font-semibold uppercase tracking-widest text-[#a8a8bd] mb-1.5">
-          {label}
-        </label>
-      )}
+      {label && <label className={labelCls}>{label}</label>}
       <input
         ref={ref}
-        className={clsx(
-          'w-full px-3 py-2.5 rounded-lg text-sm text-[#f7f7ff] placeholder:text-[#a8a8bd]/45 transition-all focus:outline-none focus:ring-1',
-          'bg-[#0a0a14] border',
-          error
-            ? 'border-[#ff00d4]/50 focus:border-[#ff00d4] focus:ring-[#ff00d4]/25'
-            : 'border-[rgba(255,255,255,0.09)] focus:border-[#6b2cff] focus:ring-[#6b2cff]/25',
-          className
-        )}
+        className={clsx(fieldBase, 'placeholder:text-subtle', fieldState(error), className)}
         {...props}
       />
-      {error && <p className="mt-1 text-xs text-[#ff88d4]">{error}</p>}
+      {error && <p className="mt-1 text-xs text-danger">{error}</p>}
     </div>
   )
 )
@@ -41,26 +40,15 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ label, error, className, children, ...props }, ref) => (
     <div className="w-full">
-      {label && (
-        <label className="block text-xs font-semibold uppercase tracking-widest text-[#a8a8bd] mb-1.5">
-          {label}
-        </label>
-      )}
+      {label && <label className={labelCls}>{label}</label>}
       <select
         ref={ref}
-        className={clsx(
-          'w-full px-3 py-2.5 rounded-lg text-sm text-[#f7f7ff] transition-all focus:outline-none focus:ring-1',
-          'bg-[#0a0a14] border',
-          error
-            ? 'border-[#ff00d4]/50 focus:border-[#ff00d4] focus:ring-[#ff00d4]/25'
-            : 'border-[rgba(255,255,255,0.09)] focus:border-[#6b2cff] focus:ring-[#6b2cff]/25',
-          className
-        )}
+        className={clsx(fieldBase, fieldState(error), className)}
         {...props}
       >
         {children}
       </select>
-      {error && <p className="mt-1 text-xs text-[#ff88d4]">{error}</p>}
+      {error && <p className="mt-1 text-xs text-danger">{error}</p>}
     </div>
   )
 )
@@ -74,25 +62,14 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ label, error, className, ...props }, ref) => (
     <div className="w-full">
-      {label && (
-        <label className="block text-xs font-semibold uppercase tracking-widest text-[#a8a8bd] mb-1.5">
-          {label}
-        </label>
-      )}
+      {label && <label className={labelCls}>{label}</label>}
       <textarea
         ref={ref}
         rows={3}
-        className={clsx(
-          'w-full px-3 py-2.5 rounded-lg text-sm text-[#f7f7ff] placeholder:text-[#a8a8bd]/45 transition-all focus:outline-none focus:ring-1 resize-none',
-          'bg-[#0a0a14] border',
-          error
-            ? 'border-[#ff00d4]/50 focus:border-[#ff00d4] focus:ring-[#ff00d4]/25'
-            : 'border-[rgba(255,255,255,0.09)] focus:border-[#6b2cff] focus:ring-[#6b2cff]/25',
-          className
-        )}
+        className={clsx(fieldBase, 'placeholder:text-subtle resize-none', fieldState(error), className)}
         {...props}
       />
-      {error && <p className="mt-1 text-xs text-[#ff88d4]">{error}</p>}
+      {error && <p className="mt-1 text-xs text-danger">{error}</p>}
     </div>
   )
 )

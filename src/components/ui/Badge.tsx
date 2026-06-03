@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 import { clsx } from 'clsx'
 
-type BadgeVariant = 'green' | 'yellow' | 'red' | 'blue' | 'gray'
+type BadgeVariant = 'green' | 'yellow' | 'red' | 'blue' | 'gray' | 'violet'
 
 interface BadgeProps {
   variant: BadgeVariant
@@ -10,18 +10,19 @@ interface BadgeProps {
 }
 
 const variants: Record<BadgeVariant, string> = {
-  green:  'bg-[#00d9ff]/10 text-[#00d9ff]  border border-[#00d9ff]/20',
-  yellow: 'bg-[#fbbf24]/10 text-[#fbbf24]  border border-[#fbbf24]/20',
-  red:    'bg-[#ff00d4]/10 text-[#ff88d4]  border border-[#ff00d4]/20',
-  blue:   'bg-[#6b2cff]/12 text-[#a78bfa]  border border-[#6b2cff]/25',
-  gray:   'bg-white/5      text-[#a8a8bd]  border border-white/10',
+  green:  'bg-success/10 text-[#047857]',
+  yellow: 'bg-warning/10 text-[#b45309]',
+  red:    'bg-danger/10  text-[#b91c1c]',
+  blue:   'bg-info/10    text-[#1d4ed8]',
+  violet: 'bg-violet/10  text-[#6d28d9]',
+  gray:   'bg-surface-2  text-muted',
 }
 
 export function Badge({ variant, children, className }: BadgeProps) {
   return (
     <span
       className={clsx(
-        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold tracking-wide',
+        'inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wide',
         variants[variant],
         className
       )}

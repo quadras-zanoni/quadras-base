@@ -25,25 +25,19 @@ export function Modal({ open, onClose, title, children, size = 'md' }: ModalProp
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="absolute inset-0 bg-black/65 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
         onClick={onClose}
       />
       <div
-        className={`relative w-full ${sizes[size]} max-h-[90vh] overflow-y-auto rounded-lg border border-[rgba(255,255,255,0.09)]`}
-        style={{
-          background: '#0d0d16',
-          boxShadow: '0 24px 80px rgba(0,0,0,0.7), 0 0 48px rgba(107,44,255,0.10)',
-        }}
+        className={`relative w-full ${sizes[size]} max-h-[90vh] overflow-y-auto bg-surface rounded-[var(--radius-card)] border border-line shadow-xl`}
       >
-        <div className="flex items-center justify-between px-5 py-4 border-b border-[rgba(255,255,255,0.07)]">
-          <h2 className="text-sm font-semibold text-[#f7f7ff] font-heading tracking-wide">
-            {title}
-          </h2>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-line">
+          <h2 className="text-base font-semibold text-ink">{title}</h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#a8a8bd] hover:text-[#f7f7ff] hover:bg-white/6 transition-colors"
+            className="p-1.5 rounded-[var(--radius-ctl)] text-muted hover:text-ink hover:bg-surface-2 transition-colors"
           >
-            <X size={17} />
+            <X size={18} />
           </button>
         </div>
         <div className="p-5">{children}</div>

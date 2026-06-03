@@ -25,6 +25,21 @@ const navItems = [
   { href: '/link-cliente',      label: 'Link do Cliente',  icon: Link2 },
 ]
 
+function BrandMark({ size = 36 }: { size?: number }) {
+  return (
+    <div
+      className="rounded-[10px] flex items-center justify-center shrink-0 bg-brand"
+      style={{ width: size, height: size }}
+    >
+      <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" strokeWidth="2" />
+        <path d="M12 5v14" stroke="white" strokeWidth="2" />
+        <circle cx="12" cy="12" r="1.6" fill="white" />
+      </svg>
+    </div>
+  )
+}
+
 function NavLink({
   href, label, icon: Icon, active, badge,
 }: {
@@ -35,19 +50,16 @@ function NavLink({
     <Link
       href={href}
       className={clsx(
-        'relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all tracking-wide',
+        'relative flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-ctl)] text-sm transition-colors',
         active
-          ? 'nav-active'
-          : 'text-[#a8a8bd] hover:bg-white/4 hover:text-[#f7f7ff]'
+          ? 'bg-brand-weak text-brand font-semibold'
+          : 'text-muted font-medium hover:bg-surface-2 hover:text-ink'
       )}
     >
-      <Icon size={17} className="shrink-0" />
+      <Icon size={18} className="shrink-0" />
       <span className="flex-1">{label}</span>
       {badge != null && badge > 0 && (
-        <span
-          className="text-xs font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center text-white"
-          style={{ background: 'linear-gradient(90deg,#ff00d4,#6b2cff)' }}
-        >
+        <span className="text-[11px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center text-white bg-violet">
           {badge > 99 ? '99+' : badge}
         </span>
       )}
@@ -55,9 +67,33 @@ function NavLink({
   )
 }
 
+function UserFooter() {
+  const { user, logout } = useAuth()
+  const initials = (user?.email?.slice(0, 2) || 'AD').toUpperCase()
+  return (
+    <div className="px-2 pt-4 mt-2 border-t border-line space-y-1">
+      <div className="flex items-center gap-2.5 px-2 py-2">
+        <div className="w-9 h-9 rounded-full bg-brand-weak text-brand flex items-center justify-center text-xs font-bold shrink-0">
+          {initials}
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-ink leading-tight">Administrador</p>
+          <p className="text-[11px] text-subtle truncate max-w-[150px]">{user?.email}</p>
+        </div>
+      </div>
+      <button
+        onClick={logout}
+        className="flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-ctl)] text-sm font-medium text-muted hover:text-danger hover:bg-danger/5 transition-colors w-full"
+      >
+        <LogOut size={18} />
+        <span>Sair</span>
+      </button>
+    </div>
+  )
+}
+
 function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   const pathname = usePathname()
-  const { user, logout } = useAuth()
   const pendingCount = usePendingCount()
 
   const isActive = (href: string) =>
@@ -66,28 +102,16 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   return (
     <>
       {/* Brand */}
-      <div className="px-4 mb-7">
+      <div className="px-4 mb-6">
         <div className="flex items-center gap-2.5">
-          <div
-            className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(135deg,#ff00d4,#6b2cff,#00d9ff)' }}
-          >
-            <Flag size={17} className="text-white" />
-          </div>
+          <BrandMark />
           <div>
-            <span className="font-heading font-bold text-[#f7f7ff] text-sm tracking-widest gradient-text">
-              QUADRAS
-            </span>
-            <p className="text-[10px] text-[#a8a8bd] -mt-0.5 truncate max-w-[140px]">
-              {user?.email}
+            <span className="font-bold text-ink text-base tracking-tight">QUADRAS</span>
+            <p className="text-[10px] font-medium text-subtle uppercase tracking-widest -mt-0.5">
+              Gestão Inteligente
             </p>
           </div>
         </div>
-        {/* Gradient divider */}
-        <div
-          className="mt-5 h-px"
-          style={{ background: 'linear-gradient(90deg,#ff00d4,#6b2cff,#00d9ff,transparent)' }}
-        />
       </div>
 
       {/* Navigation */}
@@ -102,16 +126,7 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
         ))}
       </nav>
 
-      {/* Logout */}
-      <div className="px-2 pt-4 mt-4 border-t border-[rgba(255,255,255,0.06)]">
-        <button
-          onClick={logout}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[#a8a8bd] hover:text-[#ff88d4] hover:bg-[#ff00d4]/6 transition-all w-full tracking-wide"
-        >
-          <LogOut size={17} />
-          <span>Sair</span>
-        </button>
-      </div>
+      <UserFooter />
     </>
   )
 }
@@ -123,40 +138,22 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside
-        className="hidden lg:flex flex-col w-64 min-h-screen py-6"
-        style={{
-          background: '#0d0d16',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
+      <aside className="hidden lg:flex flex-col w-64 min-h-screen py-6 bg-surface border-r border-line">
         <SidebarContent />
       </aside>
 
       {/* Mobile top bar */}
-      <header
-        className="lg:hidden fixed top-0 inset-x-0 z-40 flex items-center justify-between px-4 py-3"
-        style={{
-          background: '#0d0d16',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-        }}
-      >
+      <header className="lg:hidden fixed top-0 inset-x-0 z-40 flex items-center justify-between px-4 py-3 bg-surface border-b border-line">
         <div className="flex items-center gap-2">
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg,#ff00d4,#6b2cff,#00d9ff)' }}
-          >
-            <Flag size={14} className="text-white" />
-          </div>
-          <span className="font-heading font-bold text-xs tracking-widest gradient-text">QUADRAS</span>
+          <BrandMark size={28} />
+          <span className="font-bold text-ink text-sm tracking-tight">QUADRAS</span>
         </div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className="p-2 rounded-lg text-[#a8a8bd] hover:bg-white/5 hover:text-[#f7f7ff] relative transition-colors"
+          className="p-2 rounded-[var(--radius-ctl)] text-muted hover:bg-surface-2 hover:text-ink relative transition-colors"
         >
           {pendingCount > 0 && !mobileOpen && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 text-white text-[10px] rounded-full flex items-center justify-center font-bold"
-              style={{ background: 'linear-gradient(90deg,#ff00d4,#6b2cff)' }}>
+            <span className="absolute -top-1 -right-1 w-4 h-4 text-white text-[10px] rounded-full flex items-center justify-center font-bold bg-violet">
               {pendingCount > 9 ? '9+' : pendingCount}
             </span>
           )}
@@ -167,11 +164,8 @@ export function Sidebar() {
       {/* Mobile drawer */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <aside
-            className="relative w-72 h-full flex flex-col py-6 overflow-y-auto"
-            style={{ background: '#0d0d16', borderRight: '1px solid rgba(255,255,255,0.06)' }}
-          >
+          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <aside className="relative w-72 h-full flex flex-col py-6 overflow-y-auto bg-surface border-r border-line">
             <SidebarContent onLinkClick={() => setMobileOpen(false)} />
           </aside>
         </div>

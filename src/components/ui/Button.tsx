@@ -18,16 +18,17 @@ export function Button({
   ...props
 }: ButtonProps) {
   const base =
-    'inline-flex items-center justify-center font-semibold rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#05050a] disabled:opacity-40 disabled:cursor-not-allowed tracking-wide'
+    'inline-flex items-center justify-center gap-2 font-semibold rounded-[var(--radius-ctl)] transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-canvas disabled:opacity-50 disabled:cursor-not-allowed'
 
   const variants = {
-    primary: 'btn-gradient focus:ring-[#6b2cff]',
+    primary:
+      'bg-primary text-white hover:bg-primary-hover focus:ring-primary',
     secondary:
-      'bg-[#151522] text-[#f7f7ff] border border-[rgba(255,255,255,0.09)] hover:border-[rgba(255,255,255,0.18)] hover:bg-[#1e1e30] focus:ring-[#6b2cff]',
+      'bg-surface text-ink border border-line hover:bg-surface-2 focus:ring-primary',
     danger:
-      'bg-[#ff00d4]/10 text-[#ff88d4] border border-[#ff00d4]/25 hover:bg-[#ff00d4]/18 focus:ring-[#ff00d4]',
+      'bg-danger/10 text-danger border border-danger/20 hover:bg-danger/15 focus:ring-danger',
     ghost:
-      'text-[#a8a8bd] hover:bg-white/5 hover:text-[#f7f7ff] focus:ring-[#6b2cff]',
+      'text-muted hover:bg-surface-2 hover:text-ink focus:ring-primary',
   }
 
   const sizes = {
@@ -43,7 +44,7 @@ export function Button({
       {...props}
     >
       {loading && (
-        <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+        <svg className="animate-spin -ml-1 h-4 w-4" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
