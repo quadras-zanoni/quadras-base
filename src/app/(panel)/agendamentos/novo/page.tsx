@@ -11,7 +11,7 @@ import { Card } from '@/components/ui/Card'
 import { format, addMinutes, parse, addWeeks, getDay, addDays, isAfter, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
-import { Clock, CheckCircle, RefreshCw, User, UserPlus } from 'lucide-react'
+import { Clock, CheckCircle, RefreshCw, User, UserPlus, ChevronLeft } from 'lucide-react'
 import { Court } from '@/types'
 
 const DAYS_OF_WEEK = [
@@ -255,6 +255,13 @@ export default function NovoAgendamentoPage() {
 
   return (
     <div className="max-w-2xl">
+      <button
+        type="button"
+        onClick={() => router.back()}
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted hover:text-ink mb-4 transition-colors"
+      >
+        <ChevronLeft size={16} /> Voltar
+      </button>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-ink">Novo Agendamento</h1>
         <p className="text-sm text-muted mt-1">Preencha os dados para reservar uma quadra</p>
