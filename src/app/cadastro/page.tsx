@@ -41,16 +41,22 @@ export default function CadastroPage() {
       <div className="w-full max-w-sm">
 
         {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand mb-4">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="3" fill="white"/>
-              <path d="M12 2C12 2 7 6 7 12s5 10 5 10 5-4 5-10S12 2 12 2z" stroke="white" strokeWidth="1.5" fill="none"/>
-              <path d="M2 12h20" stroke="white" strokeWidth="1.5"/>
-            </svg>
+        <div className="flex flex-col items-center mb-8">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className="rounded-[10px] flex items-center justify-center shrink-0 bg-brand w-10 h-10">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" strokeWidth="2" />
+                <path d="M12 5v14" stroke="white" strokeWidth="2" />
+                <circle cx="12" cy="12" r="1.6" fill="white" />
+              </svg>
+            </div>
+            <div>
+              <span className="font-bold text-ink text-lg tracking-tight">QUADRAS</span>
+              <p className="text-[10px] font-medium text-subtle uppercase tracking-widest -mt-0.5">
+                Gestão Inteligente
+              </p>
+            </div>
           </div>
-          <h1 className="text-xl font-bold tracking-widest text-ink">QUADRAS</h1>
-          <p className="text-muted text-sm mt-1">Gestão Inteligente</p>
         </div>
 
         {/* Card */}

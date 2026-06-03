@@ -1,15 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
 import { useClients } from '@/hooks/useClients'
+import { useBookings } from '@/hooks/useBookings'
+import { useSales } from '@/hooks/useSales'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Badge, statusBadge } from '@/components/ui/Badge'
 import { Client, Booking } from '@/types'
-import { Users, Phone, Calendar, Search, Edit, History, MessageCircle, UserPlus } from 'lucide-react'
+import { Users, Phone, Calendar, Search, Edit, History, MessageCircle, UserPlus, TrendingUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -24,9 +26,17 @@ function openWhatsApp(phone: string) {
   window.open(`https://wa.me/${withCountry}`, '_blank')
 }
 
+/** Normaliza telefone para comparação: só dígitos, remove DDI 55 se tiver 13 dígitos */
+function normalizePhone(raw: string): string {
+  const digits = raw.replace(/\D/g, '')
+  return digits.length === 13 && digits.startsWith('55') ? digits.slice(2) : digits
+}
+
 export default function ClientesPage() {
   const { user } = useAuth()
   const { clients, loading, updateClient, addClient } = useClients()
+  const { bookings } = useBookings()
+  const { sales } = useSales()
   const [search, setSearch] = useState('')
 
   const [newModal, setNewModal] = useState(false)
@@ -45,7 +55,46 @@ export default function ClientesPage() {
   const [history, setHistory] = useState<Booking[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
 
-  const filtered = clients.filter(c => {
+  // ── Agrega total gasto por cliente (bookings não-cancelados + vendas) ──────
+  const spendByClientId = useMemo(() => {
+    const map = new Map<string, number>()
+
+    // Bookings: vincula por clientId quando existe, senão por telefone normalizado
+    for (const b of bookings) {
+      if (b.status === 'cancelado') continue
+      const key = b.clientId ?? `phone:${normalizePhone(b.clientPhone)}`
+      map.set(key, (map.get(key) ?? 0) + b.value)
+    }
+
+    // Vendas: vincula só por clientId (Sale não tem campo de telefone)
+    for (const s of sales) {
+      if (!s.clientId) continue
+      map.set(s.clientId, (map.get(s.clientId) ?? 0) + s.total)
+    }
+
+    return map
+  }, [bookings, sales])
+
+  /** Retorna total gasto de um cliente combinando chave por id e por telefone */
+  function getSpend(client: Client): number {
+    const byId    = spendByClientId.get(client.id) ?? 0
+    const byPhone = spendByClientId.get(`phone:${normalizePhone(client.phone)}`) ?? 0
+    // se o mesmo booking já foi contado via clientId, não somar duas vezes
+    // — a lógica no useMemo prioriza clientId sobre phone, então as chaves são distintas
+    return byId + byPhone
+  }
+
+  // Clientes enriquecidos com gasto, ordenados por maior gasto
+  const clientsWithSpend = useMemo(
+    () => clients.map(c => ({ ...c, totalSpend: getSpend(c) }))
+               .sort((a, b) => b.totalSpend - a.totalSpend),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [clients, spendByClientId]
+  )
+
+  const topSpender = clientsWithSpend[0]?.totalSpend > 0 ? clientsWithSpend[0] : null
+
+  const filtered = clientsWithSpend.filter(c => {
     const q = search.toLowerCase()
     return c.name.toLowerCase().includes(q) || c.phone.includes(q)
   })
@@ -143,6 +192,18 @@ export default function ClientesPage() {
         </Button>
       </div>
 
+      {/* Banner top spender */}
+      {topSpender && (
+        <div className="bg-violet/10 border border-violet/20 rounded-[var(--radius-ctl)] px-4 py-2.5 flex items-center gap-2.5">
+          <TrendingUp size={15} className="text-[#6d28d9] shrink-0" />
+          <p className="text-sm text-[#6d28d9]">
+            <span className="font-semibold">Cliente VIP:</span>{' '}
+            {topSpender.name} —{' '}
+            <span className="font-semibold">{fmt(topSpender.totalSpend)}</span> em compras e agendamentos
+          </p>
+        </div>
+      )}
+
       {/* Busca */}
       <div className="bg-surface border border-line rounded-[var(--radius-ctl)] px-3 h-10 flex items-center gap-2">
         <Search size={16} className="text-muted shrink-0" />
@@ -168,16 +229,21 @@ export default function ClientesPage() {
         </div>
       ) : (
         <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card divide-y divide-line">
-          {filtered.map(client => (
+          {filtered.map((client, idx) => {
+            const isVip = idx === 0 && client.totalSpend > 0
+            return (
             <div key={client.id} className="flex items-center gap-4 px-4 py-3.5">
               {/* Avatar */}
-              <div className="w-10 h-10 rounded-full bg-brand-weak text-brand font-bold text-sm flex items-center justify-center shrink-0 border-2 border-surface">
+              <div className={`w-10 h-10 rounded-full font-bold text-sm flex items-center justify-center shrink-0 border-2 border-surface ${isVip ? 'bg-violet/10 text-[#6d28d9]' : 'bg-brand-weak text-brand'}`}>
                 {client.name.charAt(0).toUpperCase()}
               </div>
 
               {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-ink truncate">{client.name}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-ink truncate">{client.name}</p>
+                  {isVip && <Badge variant="violet">VIP</Badge>}
+                </div>
                 <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                   <span className="flex items-center gap-1 text-xs text-muted">
                     <Phone size={11} /> {client.phone}
@@ -191,6 +257,11 @@ export default function ClientesPage() {
                   <span className="text-xs text-subtle">
                     {client.totalBookings} agendamento{client.totalBookings !== 1 ? 's' : ''}
                   </span>
+                  {client.totalSpend > 0 && (
+                    <span className={`text-xs font-semibold ${isVip ? 'text-[#6d28d9]' : 'text-brand'}`}>
+                      {fmt(client.totalSpend)}
+                    </span>
+                  )}
                 </div>
                 {client.notes && <p className="text-xs text-subtle mt-1 truncate">{client.notes}</p>}
               </div>
@@ -208,7 +279,8 @@ export default function ClientesPage() {
                 </Button>
               </div>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

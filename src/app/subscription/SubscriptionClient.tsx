@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
 
 interface Props {
@@ -104,10 +105,10 @@ export default function SubscriptionClient({
 
         {/* Badge de aviso */}
         <div className="flex justify-center mb-5">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-warning/10 text-[#b45309]">
-            <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+          <Badge variant="yellow">
+            <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse mr-1" />
             Acesso bloqueado
-          </span>
+          </Badge>
         </div>
 
         {/* Card principal */}
