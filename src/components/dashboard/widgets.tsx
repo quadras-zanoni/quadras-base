@@ -56,36 +56,6 @@ export function Donut({
   )
 }
 
-/** Anel multi-segmento (ex: planos) em SVG. */
-export function MultiDonut({
-  segments, size = 92, stroke = 14,
-}: {
-  segments: { value: number; color: string }[]
-  size?: number
-  stroke?: number
-}) {
-  const r = (size - stroke) / 2
-  const c = 2 * Math.PI * r
-  const total = segments.reduce((s, x) => s + x.value, 0) || 1
-  let offset = 0
-  return (
-    <svg width={size} height={size} className="-rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--color-surface-2)" strokeWidth={stroke} />
-      {segments.map((seg, i) => {
-        const len = (seg.value / total) * c
-        const el = (
-          <circle
-            key={i} cx={size / 2} cy={size / 2} r={r} fill="none" stroke={seg.color} strokeWidth={stroke}
-            strokeDasharray={`${len} ${c - len}`} strokeDashoffset={-offset}
-          />
-        )
-        offset += len
-        return el
-      })}
-    </svg>
-  )
-}
-
 type CourtState = 'livre' | 'jogo' | 'pendente' | 'manutencao'
 
 const courtTone: Record<CourtState, { line: string; fill: string }> = {

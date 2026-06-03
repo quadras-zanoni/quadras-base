@@ -95,7 +95,6 @@ export default function VendasPage() {
     try {
       await registerSale(
         items,
-        products,
         paymentMethod,
         notes,
         selectedClientId || undefined,

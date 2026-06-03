@@ -85,6 +85,8 @@ create table if not exists stock_movements (
 create table if not exists sales (
   id uuid primary key default gen_random_uuid(),
   owner_id uuid references auth.users(id) on delete cascade not null,
+  client_id uuid,
+  client_name text,
   items jsonb not null default '[]',
   total numeric not null,
   payment_method text not null,

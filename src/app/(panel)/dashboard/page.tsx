@@ -98,7 +98,7 @@ export default function DashboardPage() {
           <button className="relative w-10 h-10 rounded-[var(--radius-ctl)] border border-line bg-surface text-muted hover:text-ink flex items-center justify-center transition-colors">
             <Bell size={18} />
             {pending.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4.5 h-4.5 min-w-[18px] h-[18px] text-[10px] font-bold rounded-full bg-violet text-white flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-[18px] h-[18px] text-[10px] font-bold rounded-full bg-violet text-white flex items-center justify-center">
                 {pending.length}
               </span>
             )}

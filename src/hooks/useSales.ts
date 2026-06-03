@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
-import { Sale, SaleItem, Product } from '@/types'
+import { Sale, SaleItem } from '@/types'
 import { format } from 'date-fns'
 
 function mapSale(row: Record<string, unknown>): Sale {
@@ -37,52 +37,24 @@ export function useSales() {
 
   useEffect(() => { load() }, [load])
 
+  // Venda transacional via RPC (migration 0002): valida estoque, grava a venda,
+  // baixa o estoque e registra a movimentação de forma ATÔMICA no banco.
   async function registerSale(
     items: SaleItem[],
-    products: Product[],
     paymentMethod: Sale['paymentMethod'],
     notes?: string,
     clientId?: string,
     clientName?: string
   ) {
     if (!user) return
-    const total = items.reduce((sum, item) => sum + item.total, 0)
-
-    const { error: saleError } = await supabase.from('sales').insert({
-      owner_id: user.id,
-      client_id: clientId ?? null,
-      client_name: clientName ?? null,
-      items,
-      total,
-      payment_method: paymentMethod,
-      notes: notes || '',
+    const { error } = await supabase.rpc('register_sale', {
+      p_items: items,
+      p_payment_method: paymentMethod,
+      p_notes: notes || '',
+      p_client_id: clientId ?? null,
+      p_client_name: clientName ?? null,
     })
-    if (saleError) throw saleError
-
-    for (const item of items) {
-      const product = products.find(p => p.id === item.productId)
-      if (!product) continue
-      const newQty = product.quantity - item.quantity
-
-      const { error: prodError } = await supabase.from('products').update({
-        quantity: newQty,
-        updated_at: new Date().toISOString(),
-      }).eq('id', item.productId)
-      if (prodError) throw prodError
-
-      const { error: movError } = await supabase.from('stock_movements').insert({
-        owner_id: user.id,
-        product_id: item.productId,
-        product_name: item.productName,
-        type: 'saida',
-        quantity: item.quantity,
-        reason: 'Venda registrada',
-        previous_quantity: product.quantity,
-        new_quantity: newQty,
-      })
-      if (movError) throw movError
-    }
-
+    if (error) throw error
     await load()
   }
 
