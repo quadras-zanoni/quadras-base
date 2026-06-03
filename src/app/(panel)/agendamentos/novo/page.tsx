@@ -363,7 +363,7 @@ export default function NovoAgendamentoPage() {
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <Input
-                    label={`Subtotal (R$) — ${slotCount || 1} slot${slotCount !== 1 ? 's' : ''}`}
+                    label={`Subtotal (R$) — ${slotCount || 1} slot${(slotCount || 1) !== 1 ? 's' : ''}`}
                     type="number"
                     min="0"
                     step="0.01"

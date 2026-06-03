@@ -14,8 +14,8 @@ import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 const typeConfig = {
-  entrada: { label: 'Entrada', color: 'green' as const, icon: ArrowDown },
-  saida:   { label: 'Saída',   color: 'red'    as const, icon: ArrowUp },
+  entrada: { label: 'Entrada', color: 'green' as const, icon: ArrowUp },
+  saida:   { label: 'Saída',   color: 'red'    as const, icon: ArrowDown },
   ajuste:  { label: 'Ajuste',  color: 'violet' as const, icon: RefreshCw },
 }
 
@@ -65,7 +65,7 @@ export default function MovimentacoesPage() {
         <div>
           <h1 className="text-2xl font-bold text-ink">Movimentações de Estoque</h1>
           <p className="text-sm text-muted mt-0.5">
-            {movements.length} movimentação{movements.length !== 1 ? 'ões' : ''} registrada{movements.length !== 1 ? 's' : ''}
+            {movements.length} movimentaç{movements.length !== 1 ? 'ões' : 'ão'} registrada{movements.length !== 1 ? 's' : ''}
           </p>
         </div>
         <Button variant="primary" size="md" onClick={() => setModal(true)}>

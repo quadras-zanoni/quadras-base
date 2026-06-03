@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/Input'
 import { format, addMinutes, parse } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Clock, CheckCircle, Calendar, Zap, ChevronLeft } from 'lucide-react'
-import { Toaster } from 'react-hot-toast'
 import toast from 'react-hot-toast'
 
 /* ─── tipos locais ─── */
@@ -226,8 +225,6 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
   if (success) {
     return (
       <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
-        <Toaster position="top-right" />
-
         <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card max-w-md w-full p-8 text-center">
           <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-5">
             <CheckCircle size={30} className="text-success" />
@@ -309,8 +306,6 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
   /* ─── Página principal ─── */
   return (
     <div className="min-h-screen bg-canvas">
-      <Toaster position="top-right" />
-
       {/* Header */}
       <header className="sticky top-0 z-10 bg-surface border-b border-line">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
