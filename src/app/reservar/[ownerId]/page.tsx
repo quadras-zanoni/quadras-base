@@ -32,10 +32,7 @@ function generateSlots(court: Court, bookings: Booking[]) {
 
 function StepBadge({ n }: { n: number }) {
   return (
-    <span
-      className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center text-white shrink-0"
-      style={{ background: 'linear-gradient(135deg,#ff00d4,#6b2cff)' }}
-    >
+    <span className="w-6 h-6 rounded-full text-xs font-bold flex items-center justify-center bg-brand text-white shrink-0">
       {n}
     </span>
   )
@@ -167,50 +164,26 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
   /* ─── Tela de sucesso ─── */
   if (success) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden"
-        style={{ background: '#05050a' }}
-      >
-        <Toaster position="top-right" toastOptions={{
-          style: { background: '#151522', color: '#f7f7ff', border: '1px solid rgba(255,255,255,0.09)' },
-        }}/>
+      <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
+        <Toaster position="top-right" />
 
-        {/* Glows */}
-        <div className="fixed inset-0 pointer-events-none">
-          <div style={{ position:'absolute', top:'-20%', left:'50%', transform:'translateX(-50%)',
-            width:'60%', height:'60%',
-            background:'radial-gradient(circle,rgba(0,217,255,0.10) 0%,transparent 65%)' }}/>
-          <div style={{ position:'absolute', bottom:'-10%', left:'20%',
-            width:'40%', height:'40%',
-            background:'radial-gradient(circle,rgba(107,44,255,0.08) 0%,transparent 70%)' }}/>
-        </div>
-
-        <div
-          className="relative rounded-lg p-8 max-w-md w-full text-center"
-          style={{ background:'#0d0d16', border:'1px solid rgba(255,255,255,0.09)',
-            boxShadow:'0 24px 80px rgba(0,0,0,0.5),0 0 48px rgba(0,217,255,0.08)' }}
-        >
-          {/* Icon */}
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
-            style={{ background:'rgba(0,217,255,0.12)', border:'1px solid rgba(0,217,255,0.25)' }}
-          >
-            <CheckCircle size={30} style={{ color:'#00d9ff' }}/>
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card max-w-md w-full p-8 text-center">
+          {/* Ícone */}
+          <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-5">
+            <CheckCircle size={30} className="text-success" />
           </div>
 
-          <h2 className="font-heading text-xl font-bold text-[#f7f7ff] tracking-wide mb-2">
+          <h2 className="text-xl font-bold text-ink mb-2">
             Reserva solicitada!
           </h2>
-          <p className="text-[#a8a8bd] text-sm mb-6 leading-relaxed">
-            Sua reserva foi enviada e está <span className="text-[#f7f7ff] font-semibold">aguardando confirmação</span>.
+          <p className="text-muted text-sm mb-6 leading-relaxed">
+            Sua reserva foi enviada e está{' '}
+            <span className="text-ink font-semibold">aguardando confirmação</span>.
             Em breve você receberá um retorno.
           </p>
 
           {/* Resumo */}
-          <div
-            className="rounded-lg p-4 text-left space-y-2.5 text-sm mb-6"
-            style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}
-          >
+          <div className="bg-surface-2 border border-line rounded-[var(--radius-ctl)] p-4 text-left space-y-2.5 text-sm mb-6">
             {[
               ['Quadra',   selectedCourt?.name],
               ['Data',     format(new Date(selectedDate + 'T12:00:00'), "dd 'de' MMMM", { locale: ptBR })],
@@ -218,8 +191,8 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
               ['Nome',     clientName],
             ].map(([k, v]) => (
               <div key={k} className="flex justify-between gap-4">
-                <span className="text-[#a8a8bd]">{k}</span>
-                <span className="font-semibold text-[#f7f7ff] text-right">{v}</span>
+                <span className="text-muted">{k}</span>
+                <span className="font-semibold text-ink text-right">{v}</span>
               </div>
             ))}
           </div>
@@ -244,35 +217,14 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
 
   /* ─── Página principal ─── */
   return (
-    <div className="min-h-screen relative" style={{ background: '#05050a' }}>
-      <Toaster position="top-right" toastOptions={{
-        style: { background: '#151522', color: '#f7f7ff', border: '1px solid rgba(255,255,255,0.09)' },
-      }}/>
-
-      {/* Background glows */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div style={{ position:'absolute', top:'-15%', left:'-10%',
-          width:'50%', height:'50%',
-          background:'radial-gradient(circle,rgba(255,0,212,0.08) 0%,transparent 65%)' }}/>
-        <div style={{ position:'absolute', top:'-10%', right:'-5%',
-          width:'45%', height:'45%',
-          background:'radial-gradient(circle,rgba(0,217,255,0.08) 0%,transparent 65%)' }}/>
-        <div
-          className="absolute inset-0 opacity-[0.07]"
-          style={{ backgroundImage:'url(/court-pattern.svg)', backgroundRepeat:'repeat', backgroundSize:'140px' }}
-        />
-      </div>
+    <div className="min-h-screen bg-canvas">
+      <Toaster position="top-right" />
 
       {/* Header */}
-      <header
-        className="relative z-10 px-4 py-4 border-b border-[rgba(255,255,255,0.07)]"
-        style={{ background:'rgba(13,13,22,0.95)', backdropFilter:'blur(12px)' }}
-      >
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-            style={{ background:'linear-gradient(135deg,#ff00d4,#6b2cff,#00d9ff)' }}
-          >
+      <header className="sticky top-0 z-10 bg-surface border-b border-line">
+        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
+          {/* Logo BrandMark teal */}
+          <div className="w-10 h-10 rounded-xl bg-brand flex items-center justify-center shrink-0">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="3" fill="white"/>
               <path d="M12 2C12 2 7 6 7 12s5 10 5 10 5-4 5-10S12 2 12 2z" stroke="white" strokeWidth="1.5" fill="none"/>
@@ -280,31 +232,28 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
             </svg>
           </div>
           <div>
-            <h1 className="font-heading font-bold text-sm tracking-widest gradient-text">QUADRAS</h1>
-            <p className="text-[10px] text-[#a8a8bd]">Reserve sua quadra de beach tennis</p>
+            <h1 className="font-bold text-sm tracking-widest text-brand uppercase">QUADRAS</h1>
+            <p className="text-[11px] text-muted">Reserve sua quadra de beach tennis</p>
           </div>
         </div>
       </header>
 
-      {/* Content */}
-      <div className="relative z-10 max-w-2xl mx-auto p-4 space-y-3 pb-10">
+      {/* Conteúdo */}
+      <div className="max-w-2xl mx-auto p-4 space-y-3 pb-10">
 
         {/* Passo 1 — Escolher quadra */}
-        <div
-          className="rounded-lg p-5 border border-[rgba(255,255,255,0.09)]"
-          style={{ background:'#0d0d16' }}
-        >
-          <h2 className="font-heading text-xs font-semibold text-[#f7f7ff] tracking-widest mb-4 flex items-center gap-2">
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-5">
+          <h2 className="text-xs font-semibold text-ink tracking-widest mb-4 flex items-center gap-2 uppercase">
             <StepBadge n={1} />
-            ESCOLHA A QUADRA
+            Escolha a quadra
           </h2>
 
           {loadingCourts ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-7 w-7 border-2 border-transparent border-t-[#6b2cff]"/>
+              <div className="animate-spin rounded-full h-7 w-7 border-2 border-line border-t-brand" />
             </div>
           ) : courts.length === 0 ? (
-            <p className="text-[#a8a8bd] text-sm text-center py-6">
+            <p className="text-muted text-sm text-center py-6">
               Nenhuma quadra disponível no momento.
             </p>
           ) : (
@@ -315,21 +264,16 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
                   <button
                     key={court.id}
                     onClick={() => setSelectedCourt(court)}
-                    className="p-4 rounded-lg text-left transition-all"
-                    style={{
-                      background: active ? 'rgba(107,44,255,0.12)' : 'rgba(255,255,255,0.03)',
-                      border: active
-                        ? '1.5px solid #6b2cff'
-                        : '1px solid rgba(255,255,255,0.09)',
-                      boxShadow: active ? '0 0 18px rgba(107,44,255,0.18)' : 'none',
-                    }}
+                    className={[
+                      'p-4 rounded-[var(--radius-ctl)] text-left transition-all',
+                      active
+                        ? 'bg-brand/10 border-[1.5px] border-brand'
+                        : 'bg-surface-2 border border-line hover:border-brand/40',
+                    ].join(' ')}
                   >
-                    <p className="font-semibold text-[#f7f7ff] text-sm">{court.name}</p>
-                    <p className="text-xs text-[#a8a8bd] mt-0.5">{COURT_TYPES[court.type]}</p>
-                    <p
-                      className="text-sm font-bold mt-2"
-                      style={{ color: active ? '#00d9ff' : '#a8a8bd' }}
-                    >
+                    <p className="font-semibold text-ink text-sm">{court.name}</p>
+                    <p className="text-xs text-muted mt-0.5">{COURT_TYPES[court.type]}</p>
+                    <p className={['text-sm font-bold mt-2', active ? 'text-brand' : 'text-muted'].join(' ')}>
                       R$ {court.pricePerHour.toFixed(2)}<span className="font-normal text-xs">/hora</span>
                     </p>
                   </button>
@@ -341,28 +285,20 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
 
         {/* Passo 2 — Escolher data */}
         {selectedCourt && (
-          <div
-            className="rounded-lg p-5 border border-[rgba(255,255,255,0.09)]"
-            style={{ background:'#0d0d16' }}
-          >
-            <h2 className="font-heading text-xs font-semibold text-[#f7f7ff] tracking-widest mb-4 flex items-center gap-2">
+          <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-5">
+            <h2 className="text-xs font-semibold text-ink tracking-widest mb-4 flex items-center gap-2 uppercase">
               <StepBadge n={2} />
-              ESCOLHA A DATA
+              Escolha a data
             </h2>
             <input
               type="date"
               value={selectedDate}
               min={today}
               onChange={e => setSelectedDate(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg text-sm text-[#f7f7ff] focus:outline-none focus:ring-1 focus:ring-[#6b2cff] focus:border-[#6b2cff] transition-all"
-              style={{
-                background:'#0a0a14',
-                border:'1px solid rgba(255,255,255,0.09)',
-                colorScheme:'dark',
-              }}
+              className="w-full px-3 py-2.5 rounded-[var(--radius-ctl)] text-sm text-ink bg-surface border border-line focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand transition-colors"
             />
-            <p className="text-xs text-[#a8a8bd] mt-2.5 flex items-center gap-1.5 capitalize">
-              <Calendar size={12} style={{ color:'#6b2cff' }}/>
+            <p className="text-xs text-muted mt-2.5 flex items-center gap-1.5 capitalize">
+              <Calendar size={12} className="text-brand" />
               {format(new Date(selectedDate + 'T12:00:00'), "EEEE, dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
             </p>
           </div>
@@ -370,24 +306,21 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
 
         {/* Passo 3 — Escolher horário */}
         {selectedCourt && selectedDate && (
-          <div
-            className="rounded-lg p-5 border border-[rgba(255,255,255,0.09)]"
-            style={{ background:'#0d0d16' }}
-          >
-            <h2 className="font-heading text-xs font-semibold text-[#f7f7ff] tracking-widest mb-4 flex items-center gap-2">
+          <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-5">
+            <h2 className="text-xs font-semibold text-ink tracking-widest mb-4 flex items-center gap-2 uppercase">
               <StepBadge n={3} />
-              ESCOLHA O HORÁRIO
-              <span className="ml-auto text-[10px] text-[#a8a8bd] font-normal normal-case tracking-normal">
+              Escolha o horário
+              <span className="ml-auto text-[10px] text-muted font-normal normal-case tracking-normal">
                 {selectedCourt.duration} min por sessão
               </span>
             </h2>
 
             {loadingSlots ? (
               <div className="flex justify-center py-8">
-                <div className="animate-spin rounded-full h-7 w-7 border-2 border-transparent border-t-[#6b2cff]"/>
+                <div className="animate-spin rounded-full h-7 w-7 border-2 border-line border-t-brand" />
               </div>
             ) : slots.length === 0 ? (
-              <p className="text-[#a8a8bd] text-sm text-center py-6">
+              <p className="text-muted text-sm text-center py-6">
                 Sem horários disponíveis nesta data.
               </p>
             ) : (
@@ -399,31 +332,17 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
                       key={slot.time}
                       disabled={!slot.available}
                       onClick={() => setSelectedSlot(slot)}
-                      className="px-2 py-3 rounded-lg text-sm font-semibold transition-all flex flex-col items-center gap-0.5 disabled:cursor-not-allowed"
-                      style={
+                      className={[
+                        'px-2 py-3 rounded-[var(--radius-ctl)] text-sm font-semibold transition-all flex flex-col items-center gap-0.5 disabled:cursor-not-allowed',
                         selected
-                          ? {
-                              background: 'linear-gradient(135deg,#ff00d4,#6b2cff)',
-                              color: '#fff',
-                              border: '1.5px solid transparent',
-                              boxShadow: '0 0 16px rgba(107,44,255,0.35)',
-                            }
+                          ? 'bg-primary text-white border-[1.5px] border-primary'
                           : slot.available
-                          ? {
-                              background: 'rgba(255,255,255,0.04)',
-                              color: '#f7f7ff',
-                              border: '1px solid rgba(255,255,255,0.09)',
-                            }
-                          : {
-                              background: 'rgba(255,255,255,0.02)',
-                              color: 'rgba(168,168,189,0.3)',
-                              border: '1px solid rgba(255,255,255,0.04)',
-                              textDecoration: 'line-through',
-                            }
-                      }
+                          ? 'border border-line hover:border-brand hover:text-brand text-ink'
+                          : 'bg-surface-2 text-subtle line-through border border-line',
+                      ].join(' ')}
                     >
                       {slot.available && !selected && (
-                        <Clock size={10} style={{ color:'#6b2cff' }}/>
+                        <Clock size={10} className="text-brand" />
                       )}
                       {slot.time}
                     </button>
@@ -433,17 +352,17 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
             )}
 
             {/* Legenda */}
-            <div className="flex items-center gap-4 mt-4 text-[11px] text-[#a8a8bd]">
+            <div className="flex items-center gap-4 mt-4 text-[11px] text-muted">
               <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded" style={{ background:'linear-gradient(135deg,#ff00d4,#6b2cff)' }}/>
+                <span className="w-3 h-3 rounded bg-primary" />
                 Selecionado
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded" style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.09)' }}/>
+                <span className="w-3 h-3 rounded border border-line bg-surface" />
                 Disponível
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded" style={{ background:'rgba(255,255,255,0.02)' }}/>
+                <span className="w-3 h-3 rounded bg-surface-2 border border-line" />
                 Ocupado
               </span>
             </div>
@@ -452,31 +371,22 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
 
         {/* Passo 4 — Dados do cliente */}
         {selectedSlot && (
-          <div
-            className="rounded-lg p-5 border border-[rgba(255,255,255,0.09)]"
-            style={{ background:'#0d0d16' }}
-          >
-            <h2 className="font-heading text-xs font-semibold text-[#f7f7ff] tracking-widest mb-4 flex items-center gap-2">
+          <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-5">
+            <h2 className="text-xs font-semibold text-ink tracking-widest mb-4 flex items-center gap-2 uppercase">
               <StepBadge n={4} />
-              SEUS DADOS
+              Seus dados
             </h2>
 
             {/* Resumo da seleção */}
-            <div
-              className="rounded-lg p-3.5 mb-5 flex items-start gap-3"
-              style={{
-                background:'rgba(107,44,255,0.08)',
-                border:'1px solid rgba(107,44,255,0.22)',
-              }}
-            >
-              <Zap size={16} style={{ color:'#a855f7', marginTop:2, flexShrink:0 }}/>
+            <div className="bg-primary/5 border border-primary/20 rounded-[var(--radius-ctl)] p-3.5 mb-5 flex items-start gap-3">
+              <Zap size={16} className="text-primary mt-0.5 shrink-0" />
               <div className="text-sm">
-                <p className="font-semibold text-[#f7f7ff]">
+                <p className="font-semibold text-ink">
                   {selectedCourt?.name} · {selectedSlot.time} – {selectedSlot.endTime}
                 </p>
-                <p className="text-[#a8a8bd] text-xs mt-0.5">
+                <p className="text-muted text-xs mt-0.5">
                   {format(new Date(selectedDate + 'T12:00:00'), "dd/MM/yyyy", { locale: ptBR })} ·{' '}
-                  <span style={{ color:'#00d9ff' }}>
+                  <span className="text-brand font-medium">
                     R$ {(selectedCourt!.pricePerHour * (selectedCourt!.duration / 60)).toFixed(2)}
                   </span>
                 </p>
@@ -505,8 +415,8 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
               >
                 Confirmar reserva
               </Button>
-              <p className="text-xs text-[#a8a8bd] text-center leading-relaxed">
-                Sua reserva ficará <span className="text-[#f7f7ff]">pendente</span> até ser confirmada pelo responsável.
+              <p className="text-xs text-muted text-center leading-relaxed">
+                Sua reserva ficará <span className="text-ink font-medium">pendente</span> até ser confirmada pelo responsável.
               </p>
             </div>
           </div>

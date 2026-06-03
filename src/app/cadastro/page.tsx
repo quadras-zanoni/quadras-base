@@ -37,69 +37,26 @@ export default function CadastroPage() {
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden"
-      style={{ background: '#05050a' }}
-    >
-      {/* Background neon glows */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div style={{
-          position: 'absolute', top: '-15%', right: '-10%',
-          width: '55%', height: '55%',
-          background: 'radial-gradient(circle, rgba(107,44,255,0.10) 0%, transparent 65%)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: '-10%', left: '-10%',
-          width: '50%', height: '50%',
-          background: 'radial-gradient(circle, rgba(0,217,255,0.08) 0%, transparent 65%)',
-        }} />
-        <div style={{
-          position: 'absolute', top: '30%', left: '-5%',
-          width: '35%', height: '35%',
-          background: 'radial-gradient(circle, rgba(255,0,212,0.06) 0%, transparent 70%)',
-        }} />
-      </div>
+    <div className="min-h-screen flex items-center justify-center bg-canvas p-4">
+      <div className="w-full max-w-sm">
 
-      {/* Court pattern overlay */}
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          backgroundImage: 'url(/court-pattern.svg)',
-          backgroundRepeat: 'repeat',
-          backgroundSize: '140px',
-          opacity: 0.08,
-        }}
-      />
-
-      {/* Auth card */}
-      <div className="relative w-full max-w-[440px]">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-5"
-            style={{ background: 'linear-gradient(135deg,#ff00d4 0%,#6b2cff 50%,#00d9ff 100%)' }}
-          >
-            <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-brand mb-4">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="3" fill="white"/>
               <path d="M12 2C12 2 7 6 7 12s5 10 5 10 5-4 5-10S12 2 12 2z" stroke="white" strokeWidth="1.5" fill="none"/>
               <path d="M2 12h20" stroke="white" strokeWidth="1.5"/>
             </svg>
           </div>
-          <h1 className="font-heading font-bold text-2xl tracking-widest gradient-text">
-            QUADRAS
-          </h1>
-          <p className="text-[#a8a8bd] text-sm mt-1.5">Crie sua conta e comece agora</p>
+          <h1 className="text-xl font-bold tracking-widest text-ink">QUADRAS</h1>
+          <p className="text-muted text-sm mt-1">Gestão Inteligente</p>
         </div>
 
         {/* Card */}
-        <div
-          className="rounded-lg p-7"
-          style={{
-            background: '#0d0d16',
-            border: '1px solid rgba(255,255,255,0.09)',
-            boxShadow: '0 24px 80px rgba(0,0,0,0.5), 0 0 48px rgba(107,44,255,0.07)',
-          }}
-        >
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-7">
+          <h2 className="text-base font-semibold text-ink mb-5">Criar sua conta</h2>
+
           <form onSubmit={handleRegister} className="space-y-4">
             <Input
               label="E-mail"
@@ -125,18 +82,19 @@ export default function CadastroPage() {
               placeholder="Repita a senha"
               autoComplete="new-password"
             />
-            <Button type="submit" loading={loading} className="w-full" size="lg">
+            <Button type="submit" variant="primary" size="lg" loading={loading} className="w-full">
               Criar conta
             </Button>
           </form>
         </div>
 
-        <p className="text-center text-sm text-[#a8a8bd] mt-6 tracking-wide">
+        <p className="text-center text-sm text-muted mt-6">
           Já tem conta?{' '}
-          <Link href="/login" className="font-semibold gradient-text hover:opacity-80 transition-opacity">
+          <Link href="/login" className="font-semibold text-brand hover:opacity-80 transition-opacity">
             Fazer login
           </Link>
         </p>
+
       </div>
     </div>
   )

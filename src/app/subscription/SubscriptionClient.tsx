@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/Button'
+import { Card } from '@/components/ui/Card'
 
 interface Props {
   billingHubUrl: string
@@ -9,6 +11,21 @@ interface Props {
   qrCode: string
   qrCodeBase64: string
   valor: number
+}
+
+function BrandMark({ size = 40 }: { size?: number }) {
+  return (
+    <div
+      className="rounded-[10px] flex items-center justify-center shrink-0 bg-brand"
+      style={{ width: size, height: size }}
+    >
+      <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" strokeWidth="2" />
+        <path d="M12 5v14" stroke="white" strokeWidth="2" />
+        <circle cx="12" cy="12" r="1.6" fill="white" />
+      </svg>
+    </div>
+  )
 }
 
 export default function SubscriptionClient({
@@ -54,94 +71,108 @@ export default function SubscriptionClient({
 
   if (paid) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0a10' }}>
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="min-h-screen flex items-center justify-center bg-canvas p-4">
+        <Card className="w-full max-w-sm p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-rajdhani, sans-serif)' }}>
+          <h2 className="text-xl font-bold text-ink mb-2">
             Pagamento confirmado!
           </h2>
-          <p className="text-sm" style={{ color: '#a8a8bd' }}>Redirecionando para o sistema...</p>
-        </div>
+          <p className="text-sm text-muted">Redirecionando para o sistema...</p>
+        </Card>
       </div>
     )
   }
 
   return (
-    <div
-      className="min-h-screen flex items-center justify-center p-6"
-      style={{ background: '#0a0a10' }}
-    >
+    <div className="min-h-screen flex items-center justify-center bg-canvas p-4">
       <div className="w-full max-w-sm">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold mb-4"
-            style={{ background: 'rgba(239,68,68,0.12)', color: '#f87171' }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-            Acesso bloqueado
+
+        {/* Logo + marca */}
+        <div className="flex flex-col items-center gap-3 mb-8">
+          <BrandMark size={48} />
+          <div className="text-center">
+            <p className="font-bold text-ink text-base tracking-tight">QUADRAS</p>
+            <p className="text-[11px] font-medium text-subtle uppercase tracking-widest">
+              Gestão Inteligente
+            </p>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2" style={{ fontFamily: 'var(--font-orbitron, monospace)' }}>
-            Mensalidade vencida
-          </h1>
-          <p className="text-sm" style={{ color: '#a8a8bd' }}>
-            Sua mensalidade venceu. Renove para continuar usando o sistema.
-          </p>
         </div>
 
-        {/* Card de pagamento */}
-        <div
-          className="rounded-2xl p-6 mb-4"
-          style={{ background: '#13131f', border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          <div className="text-center mb-5">
-            <p className="text-sm mb-1" style={{ color: '#a8a8bd' }}>Valor da mensalidade</p>
-            <p className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-orbitron, monospace)' }}>
-              R$ {valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+        {/* Badge de aviso */}
+        <div className="flex justify-center mb-5">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-warning/10 text-[#b45309]">
+            <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
+            Acesso bloqueado
+          </span>
+        </div>
+
+        {/* Card principal */}
+        <Card className="p-6">
+
+          {/* Título */}
+          <div className="text-center mb-6">
+            <h1 className="text-xl font-bold text-ink mb-1.5">
+              Mensalidade vencida
+            </h1>
+            <p className="text-sm text-muted leading-relaxed">
+              Sua mensalidade venceu. Renove para continuar usando o sistema.
             </p>
           </div>
 
-          {/* QR Code */}
-          <div className="flex justify-center mb-5">
-            {qrCodeBase64 ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={`data:image/png;base64,${qrCodeBase64}`}
-                alt="QR Code PIX"
-                className="w-52 h-52 rounded-xl"
-              />
-            ) : (
-              <div
-                className="w-52 h-52 rounded-xl flex items-center justify-center"
-                style={{ background: '#0d0d16', border: '1px solid rgba(255,255,255,0.06)' }}
-              >
-                <p className="text-xs text-center px-4" style={{ color: '#a8a8bd' }}>
-                  QR Code indisponível. Tente recarregar a página.
-                </p>
-              </div>
-            )}
+          {/* Valor */}
+          <div className="text-center mb-5 py-3 border-b border-line">
+            <p className="text-xs font-medium text-subtle uppercase tracking-wide mb-1">
+              Valor da mensalidade
+            </p>
+            <p className="text-3xl font-bold text-ink">
+              R$&nbsp;{valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            </p>
           </div>
 
-          {/* Botão copiar */}
-          <button
-            onClick={handleCopy}
-            disabled={!qrCode}
-            className="w-full py-3 rounded-xl font-semibold text-sm transition-all disabled:opacity-40"
-            style={{
-              background: copied ? 'rgba(16,185,129,0.15)' : '#6b2cff',
-              color: copied ? '#34d399' : 'white',
-              fontFamily: 'var(--font-rajdhani, sans-serif)',
-            }}
-          >
-            {copied ? '✓ Código copiado!' : 'Copiar código PIX'}
-          </button>
-        </div>
+          {/* QR Code PIX */}
+          <div className="flex justify-center mb-5">
+            <div className="bg-surface-2 border border-line rounded-[var(--radius-ctl)] p-3 inline-block">
+              {qrCodeBase64 ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={`data:image/png;base64,${qrCodeBase64}`}
+                  alt="QR Code PIX"
+                  className="w-48 h-48 rounded"
+                />
+              ) : (
+                <div className="w-48 h-48 flex items-center justify-center">
+                  <p className="text-xs text-muted text-center px-4 leading-relaxed">
+                    QR Code indisponível. Tente recarregar a página.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
 
-        <p className="text-center text-xs" style={{ color: '#6b7280' }}>
+          {/* Botão copiar PIX */}
+          {copied ? (
+            <div className="w-full py-2.5 rounded-[var(--radius-ctl)] text-sm font-semibold text-center bg-success/10 text-success">
+              ✓ Código copiado!
+            </div>
+          ) : (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={handleCopy}
+              disabled={!qrCode}
+              className="w-full"
+            >
+              Copiar código PIX
+            </Button>
+          )}
+        </Card>
+
+        {/* Rodapé */}
+        <p className="text-center text-xs text-subtle mt-4">
           O acesso é liberado automaticamente após a confirmação do pagamento.
         </p>
       </div>
