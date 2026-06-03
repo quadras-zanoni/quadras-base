@@ -55,18 +55,9 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
           <div className="flex items-center gap-2.5 mb-2">
-            <div className="rounded-[10px] flex items-center justify-center shrink-0 bg-brand w-10 h-10">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" strokeWidth="2" />
-                <path d="M12 5v14" stroke="white" strokeWidth="2" />
-                <circle cx="12" cy="12" r="1.6" fill="white" />
-              </svg>
-            </div>
-            <div>
-              <span className="font-bold text-ink text-lg tracking-tight">QUADRAS</span>
-              <p className="text-[10px] font-medium text-subtle uppercase tracking-widest -mt-0.5">
-                Gestão Inteligente
-              </p>
+            <div className="rounded-[var(--radius-card)] bg-[#0b0e0b] p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-arena.jpg" alt="Arena do Parque" className="h-16 w-auto rounded" />
             </div>
           </div>
         </div>

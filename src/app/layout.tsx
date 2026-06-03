@@ -12,8 +12,8 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Gestão de Quadras',
-  description: 'Sistema de gestão para quadras esportivas de beach tennis',
+  title: 'Arena do Parque',
+  description: 'Arena do Parque — agende sua quadra de beach tennis',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

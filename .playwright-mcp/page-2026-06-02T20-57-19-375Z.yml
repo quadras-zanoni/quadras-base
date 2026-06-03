@@ -1,0 +1,21 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - img [ref=e6]
+      - heading "QUADRAS" [level=1] [ref=e9]
+      - paragraph [ref=e10]: Gestão de beach tennis
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - generic [ref=e14]: E-mail
+        - textbox "seu@email.com" [ref=e15]
+      - generic [ref=e16]:
+        - generic [ref=e17]: Senha
+        - textbox "Sua senha" [ref=e18]
+      - button "Esqueci minha senha" [ref=e20]
+      - button "Entrar" [ref=e21]
+    - paragraph [ref=e22]:
+      - text: Não tem conta?
+      - link "Criar conta" [ref=e23] [cursor=pointer]:
+        - /url: /cadastro
+  - button "Open Next.js Dev Tools" [ref=e29] [cursor=pointer]:
+    - img [ref=e30]

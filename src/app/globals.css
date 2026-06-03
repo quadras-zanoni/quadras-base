@@ -20,11 +20,11 @@
   --color-muted: #64748b;      /* secundário */
   --color-subtle: #94a3b8;     /* terciário */
 
-  /* marca + ação */
-  --color-brand: #14b8a6;      /* teal — marca, item de menu ativo */
-  --color-brand-weak: #e6f7f4; /* fundo do item ativo */
-  --color-primary: #7c3aed;    /* violeta — ação principal */
-  --color-primary-hover: #6d28d9;
+  /* marca + ação — Arena do Parque (verde + grafite) */
+  --color-brand: #16a34a;      /* verde — marca, item de menu ativo */
+  --color-brand-weak: #dcfce7; /* fundo do item ativo */
+  --color-primary: #15803d;    /* verde escuro — ação principal */
+  --color-primary-hover: #166534;
 
   /* semânticas */
   --color-success: #10b981;

@@ -103,14 +103,9 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
     <>
       {/* Brand */}
       <div className="px-4 mb-6">
-        <div className="flex items-center gap-2.5">
-          <BrandMark />
-          <div>
-            <span className="font-bold text-ink text-base tracking-tight">QUADRAS</span>
-            <p className="text-[10px] font-medium text-subtle uppercase tracking-widest -mt-0.5">
-              Gestão Inteligente
-            </p>
-          </div>
+        <div className="rounded-[var(--radius-card)] bg-[#0b0e0b] p-2.5 flex items-center justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-arena.jpg" alt="Arena do Parque" className="w-full max-w-[170px] h-auto rounded-md" />
         </div>
       </div>
 
@@ -146,7 +141,7 @@ export function Sidebar() {
       <header className="lg:hidden fixed top-0 inset-x-0 z-40 flex items-center justify-between px-4 py-3 bg-surface border-b border-line">
         <div className="flex items-center gap-2">
           <BrandMark size={28} />
-          <span className="font-bold text-ink text-sm tracking-tight">QUADRAS</span>
+          <span className="font-bold text-ink text-sm tracking-tight">ARENA DO PARQUE</span>
         </div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}

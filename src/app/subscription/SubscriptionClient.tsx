@@ -94,12 +94,9 @@ export default function SubscriptionClient({
 
         {/* Logo + marca */}
         <div className="flex flex-col items-center gap-3 mb-8">
-          <BrandMark size={48} />
-          <div className="text-center">
-            <p className="font-bold text-ink text-base tracking-tight">QUADRAS</p>
-            <p className="text-[11px] font-medium text-subtle uppercase tracking-widest">
-              Gestão Inteligente
-            </p>
+          <div className="rounded-[var(--radius-card)] bg-[#0b0e0b] p-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-arena.jpg" alt="Arena do Parque" className="h-20 w-auto rounded" />
           </div>
         </div>
 
