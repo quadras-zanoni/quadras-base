@@ -111,26 +111,32 @@ export default function VendasPage() {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Vendas</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-ink">Vendas</h1>
+          <p className="text-sm text-muted mt-0.5">
             Hoje: {todaySales.length} venda{todaySales.length !== 1 ? 's' : ''} · {fmt(todayRevenue)}
           </p>
         </div>
-        <Button onClick={openModal}>+ Nova Venda</Button>
+        <Button variant="primary" size="md" onClick={openModal}>
+          <Plus size={16} /> Nova Venda
+        </Button>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-line border-t-brand" />
         </div>
       ) : sales.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
-          <ShoppingCart size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="text-lg mb-2">Nenhuma venda registrada</p>
-          <Button onClick={openModal}>Registrar venda</Button>
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-12 text-center">
+          <div className="w-12 h-12 rounded-[var(--radius-ctl)] bg-surface-2 flex items-center justify-center mx-auto mb-4">
+            <ShoppingCart size={24} className="text-subtle" />
+          </div>
+          <p className="text-base font-medium text-ink mb-1">Nenhuma venda registrada</p>
+          <p className="text-sm text-muted mb-4">Registre a primeira venda do dia.</p>
+          <Button variant="primary" size="md" onClick={openModal}>Registrar venda</Button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -138,32 +144,32 @@ export default function VendasPage() {
             const date = sale.createdAt ? new Date(sale.createdAt) : null
             const pm = paymentBadge[sale.paymentMethod] ?? paymentBadge.outro
             return (
-              <div key={sale.id} className="bg-white rounded-xl border border-gray-200 p-4">
+              <div key={sale.id} className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <Receipt size={15} className="text-gray-400" />
-                    <span className="text-sm text-gray-500">
+                    <Receipt size={15} className="text-subtle" />
+                    <span className="text-sm text-muted">
                       {date ? format(date, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR }) : '–'}
                     </span>
                     <Badge variant={pm.color}>{pm.label}</Badge>
                     {sale.clientName && (
-                      <span className="flex items-center gap-1 text-xs text-gray-500">
+                      <span className="flex items-center gap-1 text-xs text-muted">
                         <User size={11} /> {sale.clientName}
                       </span>
                     )}
                   </div>
-                  <span className="font-bold text-gray-900 text-lg">{fmt(sale.total)}</span>
+                  <span className="font-bold text-success text-lg">{fmt(sale.total)}</span>
                 </div>
                 <div className="space-y-1">
                   {sale.items.map(item => (
                     <div key={item.productId} className="flex justify-between text-sm">
-                      <span className="text-gray-700">{item.quantity}x {item.productName}</span>
-                      <span className="text-gray-500">{fmt(item.total)}</span>
+                      <span className="text-ink">{item.quantity}x {item.productName}</span>
+                      <span className="text-muted">{fmt(item.total)}</span>
                     </div>
                   ))}
                 </div>
                 {sale.notes && (
-                  <p className="text-xs text-gray-400 mt-2 border-t border-gray-100 pt-2">{sale.notes}</p>
+                  <p className="text-xs text-subtle mt-2 border-t border-line pt-2">{sale.notes}</p>
                 )}
               </div>
             )
@@ -175,7 +181,7 @@ export default function VendasPage() {
         <div className="space-y-4">
           {/* Adicionar produto */}
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-[#a8a8bd] mb-2">Adicionar produto</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted mb-2">Adicionar produto</p>
             <div className="flex gap-2">
               <div className="flex-1">
                 <Select
@@ -205,24 +211,24 @@ export default function VendasPage() {
 
           {/* Lista de itens */}
           {items.length === 0 ? (
-            <p className="text-sm text-[#a8a8bd] text-center py-4">Nenhum item adicionado</p>
+            <p className="text-sm text-muted text-center py-4">Nenhum item adicionado</p>
           ) : (
             <div className="space-y-2">
               {items.map(item => (
-                <div key={item.productId} className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg px-3 py-2">
+                <div key={item.productId} className="flex items-center gap-3 bg-surface-2 border border-line rounded-[var(--radius-ctl)] px-3 py-2">
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-[#f7f7ff]">{item.productName}</p>
-                    <p className="text-xs text-[#a8a8bd]">{item.quantity}x {fmt(item.unitPrice)}</p>
+                    <p className="text-sm font-medium text-ink">{item.productName}</p>
+                    <p className="text-xs text-muted">{item.quantity}x {fmt(item.unitPrice)}</p>
                   </div>
-                  <span className="font-semibold text-[#f7f7ff]">{fmt(item.total)}</span>
-                  <button onClick={() => removeItem(item.productId)} className="text-[#a8a8bd] hover:text-red-400 transition-colors">
+                  <span className="font-semibold text-ink">{fmt(item.total)}</span>
+                  <button onClick={() => removeItem(item.productId)} className="text-muted hover:text-danger transition-colors">
                     <Trash2 size={15} />
                   </button>
                 </div>
               ))}
-              <div className="flex justify-between items-center pt-2 border-t border-white/10">
-                <span className="font-semibold text-[#a8a8bd]">Total</span>
-                <span className="text-xl font-bold text-green-400">{fmt(total)}</span>
+              <div className="flex justify-between items-center pt-2 border-t border-line">
+                <span className="font-semibold text-muted">Total</span>
+                <span className="text-xl font-bold text-success">{fmt(total)}</span>
               </div>
             </div>
           )}
@@ -258,8 +264,8 @@ export default function VendasPage() {
           </div>
 
           <div className="flex gap-3">
-            <Button onClick={handleSave} loading={saving} className="flex-1" disabled={items.length === 0}>
-              <Wallet size={16} className="mr-2" />
+            <Button variant="primary" onClick={handleSave} loading={saving} className="flex-1" disabled={items.length === 0}>
+              <Wallet size={16} />
               Registrar {fmt(total)}
             </Button>
             <Button variant="secondary" onClick={() => setModal(false)} className="flex-1">

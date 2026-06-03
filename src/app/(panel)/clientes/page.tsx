@@ -131,68 +131,74 @@ export default function ClientesPage() {
     .reduce((s, b) => s + b.value, 0)
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{clients.length} cliente{clients.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-2xl font-bold text-ink">Clientes</h1>
+          <p className="text-sm text-muted mt-0.5">{clients.length} cliente{clients.length !== 1 ? 's' : ''} cadastrado{clients.length !== 1 ? 's' : ''}</p>
         </div>
-        <Button onClick={() => setNewModal(true)}>
-          <UserPlus size={16} className="mr-2" /> Novo Cliente
+        <Button variant="primary" size="md" onClick={() => setNewModal(true)}>
+          <UserPlus size={16} /> Novo Cliente
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-3 mb-4 flex items-center gap-2">
-        <Search size={18} className="text-gray-400 shrink-0" />
+      {/* Busca */}
+      <div className="bg-surface border border-line rounded-[var(--radius-ctl)] px-3 h-10 flex items-center gap-2">
+        <Search size={16} className="text-muted shrink-0" />
         <input
           type="text"
           placeholder="Buscar por nome ou telefone..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="flex-1 text-sm outline-none bg-transparent placeholder-gray-400"
+          className="flex-1 text-sm outline-none bg-transparent text-ink placeholder:text-subtle"
         />
       </div>
 
+      {/* Lista */}
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-line border-t-brand" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
-          <Users size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="text-lg">{search ? 'Nenhum cliente encontrado' : 'Nenhum cliente ainda'}</p>
-          {!search && <p className="text-sm mt-1">Criados automaticamente ao fazer agendamentos</p>}
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] p-12 text-center">
+          <Users size={40} className="mx-auto mb-3 text-subtle opacity-40" />
+          <p className="text-base text-muted">{search ? 'Nenhum cliente encontrado' : 'Nenhum cliente ainda'}</p>
+          {!search && <p className="text-sm text-subtle mt-1">Criados automaticamente ao fazer agendamentos</p>}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card divide-y divide-line">
           {filtered.map(client => (
-            <div key={client.id} className="flex items-center gap-4 px-4 py-4">
-              <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-                <span className="text-green-700 font-semibold text-sm">
-                  {client.name.charAt(0).toUpperCase()}
-                </span>
+            <div key={client.id} className="flex items-center gap-4 px-4 py-3.5">
+              {/* Avatar */}
+              <div className="w-10 h-10 rounded-full bg-brand-weak text-brand font-bold text-sm flex items-center justify-center shrink-0 border-2 border-surface">
+                {client.name.charAt(0).toUpperCase()}
               </div>
+
+              {/* Info */}
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900">{client.name}</p>
+                <p className="font-semibold text-ink truncate">{client.name}</p>
                 <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-                  <span className="flex items-center gap-1 text-xs text-gray-500">
+                  <span className="flex items-center gap-1 text-xs text-muted">
                     <Phone size={11} /> {client.phone}
                   </span>
                   {client.lastBookingDate && (
-                    <span className="flex items-center gap-1 text-xs text-gray-400">
+                    <span className="flex items-center gap-1 text-xs text-subtle">
                       <Calendar size={11} />
                       Último: {format(new Date(client.lastBookingDate + 'T12:00'), 'dd/MM/yyyy', { locale: ptBR })}
                     </span>
                   )}
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-subtle">
                     {client.totalBookings} agendamento{client.totalBookings !== 1 ? 's' : ''}
                   </span>
                 </div>
-                {client.notes && <p className="text-xs text-gray-400 mt-1 truncate">{client.notes}</p>}
+                {client.notes && <p className="text-xs text-subtle mt-1 truncate">{client.notes}</p>}
               </div>
+
+              {/* Ações */}
               <div className="flex gap-1 shrink-0">
                 <Button size="sm" variant="ghost" onClick={() => openWhatsApp(client.phone)} title="Abrir WhatsApp">
-                  <MessageCircle size={15} className="text-green-600" />
+                  <MessageCircle size={15} className="text-success" />
                 </Button>
                 <Button size="sm" variant="ghost" onClick={() => openHistory(client)} title="Ver histórico">
                   <History size={15} />
@@ -215,42 +221,42 @@ export default function ClientesPage() {
       >
         {historyLoading ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600" />
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-line border-t-brand" />
           </div>
         ) : history.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-8">Nenhum agendamento encontrado</p>
+          <p className="text-sm text-muted text-center py-8">Nenhum agendamento encontrado</p>
         ) : (
           <div className="space-y-3">
             {/* Resumo */}
-            <div className="bg-gray-50 rounded-lg p-3 grid grid-cols-3 gap-3 text-center text-sm mb-4">
+            <div className="bg-surface-2 rounded-[var(--radius-ctl)] p-3 grid grid-cols-3 gap-3 text-center mb-4">
               <div>
-                <p className="text-2xl font-bold text-gray-900">{history.length}</p>
-                <p className="text-gray-500 text-xs">Total</p>
+                <p className="text-2xl font-bold text-ink">{history.length}</p>
+                <p className="text-xs text-muted">Total</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-green-600">{history.filter(b => b.status === 'confirmado').length}</p>
-                <p className="text-gray-500 text-xs">Confirmados</p>
+                <p className="text-2xl font-bold text-success">{history.filter(b => b.status === 'confirmado').length}</p>
+                <p className="text-xs text-muted">Confirmados</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{fmt(totalRevenue)}</p>
-                <p className="text-gray-500 text-xs">Total gasto</p>
+                <p className="text-2xl font-bold text-ink">{fmt(totalRevenue)}</p>
+                <p className="text-xs text-muted">Total gasto</p>
               </div>
             </div>
 
-            <div className="divide-y divide-gray-100 max-h-72 overflow-y-auto">
+            <div className="divide-y divide-line max-h-72 overflow-y-auto">
               {history.map(b => {
                 const { variant, label } = statusBadge(b.status)
                 return (
                   <div key={b.id} className="flex items-center gap-3 py-3">
-                    <div className="text-xs text-gray-500 font-mono w-24 shrink-0">
+                    <div className="text-xs text-muted font-mono w-24 shrink-0">
                       {format(new Date(b.date + 'T12:00'), 'dd/MM/yyyy')}<br />
                       {b.startTime}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-800 truncate">{b.courtName}</p>
+                      <p className="text-sm font-medium text-ink truncate">{b.courtName}</p>
                     </div>
                     <Badge variant={variant}>{label}</Badge>
-                    <span className={`text-sm font-medium w-20 text-right ${b.status === 'cancelado' ? 'text-gray-300 line-through' : 'text-gray-900'}`}>
+                    <span className={`text-sm font-medium w-20 text-right ${b.status === 'cancelado' ? 'text-subtle line-through' : 'text-ink'}`}>
                       {fmt(b.value)}
                     </span>
                   </div>

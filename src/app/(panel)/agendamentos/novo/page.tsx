@@ -171,13 +171,13 @@ export default function NovoAgendamentoPage() {
   return (
     <div className="max-w-2xl">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Novo Agendamento</h1>
-        <p className="text-sm text-gray-500 mt-1">Preencha os dados para reservar uma quadra</p>
+        <h1 className="text-2xl font-bold text-ink">Novo Agendamento</h1>
+        <p className="text-sm text-muted mt-1">Preencha os dados para reservar uma quadra</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <Card className="p-5">
-          <h2 className="font-semibold text-gray-800 mb-4">Quadra e horário</h2>
+          <h2 className="text-base font-semibold text-ink mb-4">Quadra e horário</h2>
           <div className="space-y-4">
             <Select label="Quadra" value={courtId} onChange={e => handleCourtChange(e.target.value)}>
               <option value="">Selecione uma quadra</option>
@@ -195,11 +195,11 @@ export default function NovoAgendamentoPage() {
 
             {selectedCourt && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-[13px] font-medium text-ink mb-2">
                   Horário ({selectedCourt.duration} min por slot)
                 </label>
                 {slots.length === 0 ? (
-                  <p className="text-sm text-gray-400">Sem horários nesta data</p>
+                  <p className="text-sm text-muted">Sem horários nesta data</p>
                 ) : (
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                     {slots.map(slot => (
@@ -208,12 +208,12 @@ export default function NovoAgendamentoPage() {
                         type="button"
                         disabled={!slot.available}
                         onClick={() => setStartTime(slot.time)}
-                        className={`px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
+                        className={`px-3 py-2 rounded-[var(--radius-ctl)] text-sm font-medium border transition-colors ${
                           startTime === slot.time
-                            ? 'bg-green-600 text-white border-green-600'
+                            ? 'bg-primary text-white border-primary'
                             : slot.available
-                            ? 'bg-white text-gray-700 border-gray-300 hover:border-green-400 hover:text-green-600'
-                            : 'bg-gray-100 text-gray-300 border-gray-200 cursor-not-allowed'
+                            ? 'bg-surface text-ink border-line hover:border-brand hover:text-brand'
+                            : 'bg-surface-2 text-subtle border-line cursor-not-allowed'
                         }`}
                       >
                         {slot.available
@@ -228,9 +228,9 @@ export default function NovoAgendamentoPage() {
             )}
 
             {startTime && endTime && selectedCourt && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2">
-                <CheckCircle size={18} className="text-green-600" />
-                <span className="text-sm text-green-800">
+              <div className="bg-success/10 border border-success/20 rounded-[var(--radius-ctl)] p-3 flex items-center gap-2">
+                <CheckCircle size={18} className="text-success shrink-0" />
+                <span className="text-sm text-ink">
                   <strong>{startTime} – {endTime}</strong> · {selectedCourt.name}
                 </span>
               </div>
@@ -257,25 +257,25 @@ export default function NovoAgendamentoPage() {
         {/* Recorrência */}
         <Card className="p-5">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-gray-800 flex items-center gap-2">
-              <RefreshCw size={16} className="text-gray-400" />
+            <h2 className="text-base font-semibold text-ink flex items-center gap-2">
+              <RefreshCw size={16} className="text-muted" />
               Agendamento recorrente
             </h2>
             <label className="flex items-center gap-2 cursor-pointer">
               <div
                 onClick={() => setIsRecurring(!isRecurring)}
-                className={`w-10 h-6 rounded-full transition-colors relative cursor-pointer ${isRecurring ? 'bg-green-600' : 'bg-gray-200'}`}
+                className={`w-10 h-6 rounded-full transition-colors relative cursor-pointer ${isRecurring ? 'bg-brand' : 'bg-surface-2'}`}
               >
-                <div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-transform ${isRecurring ? 'translate-x-5' : 'translate-x-1'}`} />
+                <div className={`w-4 h-4 bg-surface rounded-full absolute top-1 transition-transform shadow-sm ${isRecurring ? 'translate-x-5' : 'translate-x-1'}`} />
               </div>
-              <span className="text-sm text-gray-600">{isRecurring ? 'Ativado' : 'Desativado'}</span>
+              <span className="text-sm text-muted">{isRecurring ? 'Ativado' : 'Desativado'}</span>
             </label>
           </div>
 
           {isRecurring && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-[13px] font-medium text-ink mb-2">
                   Repetir às {startTime || '??:??'} nos dias:
                 </label>
                 <div className="flex gap-2 flex-wrap">
@@ -284,10 +284,10 @@ export default function NovoAgendamentoPage() {
                       key={d.value}
                       type="button"
                       onClick={() => toggleDay(d.value)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
+                      className={`px-3 py-1.5 rounded-[var(--radius-ctl)] text-sm font-medium border transition-colors ${
                         recurringDays.includes(d.value)
-                          ? 'bg-green-600 text-white border-green-600'
-                          : 'bg-white text-gray-600 border-gray-300 hover:border-green-400'
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-surface text-ink border-line hover:border-brand hover:text-brand'
                       }`}
                     >
                       {d.label}
@@ -297,11 +297,11 @@ export default function NovoAgendamentoPage() {
               </div>
 
               <div className="flex items-center gap-3">
-                <label className="text-sm font-medium text-gray-700 whitespace-nowrap">Repetir por</label>
+                <label className="text-[13px] font-medium text-ink whitespace-nowrap">Repetir por</label>
                 <select
                   value={recurringWeeks}
                   onChange={e => setRecurringWeeks(Number(e.target.value))}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500 bg-white"
+                  className="px-3 py-2 border border-line rounded-[var(--radius-ctl)] text-sm text-ink bg-surface focus:outline-none focus:ring-2 focus:border-brand focus:ring-brand/20 transition-colors"
                 >
                   {[1, 2, 3, 4, 6, 8, 12].map(w => (
                     <option key={w} value={w}>{w} semana{w !== 1 ? 's' : ''}</option>
@@ -310,18 +310,18 @@ export default function NovoAgendamentoPage() {
               </div>
 
               {previewDates.length > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-xs font-medium text-blue-700 mb-2">
+                <div className="bg-info/10 border border-info/20 rounded-[var(--radius-ctl)] p-3">
+                  <p className="text-xs font-semibold text-info mb-2">
                     {previewDates.length} agendamento{previewDates.length !== 1 ? 's' : ''} serão criados:
                   </p>
                   <div className="flex flex-wrap gap-1">
                     {previewDates.slice(0, 12).map(d => (
-                      <span key={d} className="text-xs bg-white border border-blue-200 text-blue-700 px-2 py-0.5 rounded">
+                      <span key={d} className="text-xs bg-surface border border-info/20 text-info px-2 py-0.5 rounded-full font-medium">
                         {format(parseISO(d), 'dd/MM', { locale: ptBR })}
                       </span>
                     ))}
                     {previewDates.length > 12 && (
-                      <span className="text-xs text-blue-500">+{previewDates.length - 12} mais</span>
+                      <span className="text-xs text-muted">+{previewDates.length - 12} mais</span>
                     )}
                   </div>
                 </div>
@@ -331,7 +331,7 @@ export default function NovoAgendamentoPage() {
         </Card>
 
         <Card className="p-5">
-          <h2 className="font-semibold text-gray-800 mb-4">Dados do cliente</h2>
+          <h2 className="text-base font-semibold text-ink mb-4">Dados do cliente</h2>
           <div className="space-y-4">
             <Input label="Nome completo" value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Ex: João da Silva" />
             <Input label="Telefone / WhatsApp" value={clientPhone} onChange={e => setClientPhone(e.target.value)} placeholder="Ex: (11) 99999-9999" type="tel" />
@@ -340,7 +340,7 @@ export default function NovoAgendamentoPage() {
         </Card>
 
         <div className="flex gap-3">
-          <Button type="submit" loading={saving} size="lg" className="flex-1">
+          <Button type="submit" variant="primary" loading={saving} size="lg" className="flex-1">
             {isRecurring && previewDates.length > 0
               ? `Criar ${previewDates.length} agendamento${previewDates.length !== 1 ? 's' : ''}`
               : 'Criar agendamento'

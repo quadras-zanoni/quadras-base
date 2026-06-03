@@ -6,7 +6,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Booking, Sale, PAYMENT_METHODS } from '@/types'
 import { StatCard } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, parseISO } from 'date-fns'
+import { Panel } from '@/components/dashboard/widgets'
+import { format, startOfMonth, endOfMonth, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { DollarSign, Flag, ShoppingCart, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -122,77 +123,73 @@ export default function RelatorioPage() {
   const isNextDisabled = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1) > new Date()
 
   return (
-    <div>
+    <div className="space-y-5">
       {/* Header com navegação de mês */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Relatório Financeiro</h1>
-          <p className="text-sm text-gray-500 mt-0.5 capitalize">{monthLabel}</p>
+          <h1 className="text-2xl font-bold text-ink">Relatório Financeiro</h1>
+          <p className="text-sm text-muted mt-0.5 capitalize">{monthLabel}</p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={prevMonth}
-            className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+            className="w-9 h-9 flex items-center justify-center rounded-[var(--radius-ctl)] border border-line bg-surface text-muted hover:bg-surface-2 hover:text-ink transition-colors"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={17} />
           </button>
           <button
             onClick={nextMonth}
             disabled={isNextDisabled}
-            className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="w-9 h-9 flex items-center justify-center rounded-[var(--radius-ctl)] border border-line bg-surface text-muted hover:bg-surface-2 hover:text-ink transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={17} />
           </button>
         </div>
       </div>
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-line border-t-brand" />
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5">
           {/* Cards de resumo */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
               title="Receita total"
               value={fmt(totalRevenue)}
-              icon={<TrendingUp size={22} />}
+              icon={<TrendingUp size={20} />}
               color="green"
-              subtitle={`Quadras + Produtos`}
+              subtitle="Quadras + Produtos"
             />
             <StatCard
               title="Receita de quadras"
               value={fmt(bookingRevenue)}
-              icon={<Flag size={22} />}
+              icon={<Flag size={20} />}
               color="blue"
               subtitle={`${activeBookings.length} agendamentos`}
             />
             <StatCard
               title="Receita de produtos"
               value={fmt(salesRevenue)}
-              icon={<ShoppingCart size={22} />}
+              icon={<ShoppingCart size={20} />}
               color="purple"
               subtitle={`${sales.length} vendas`}
             />
             <StatCard
               title="Cancelamentos"
               value={cancelledBookings.length}
-              icon={<DollarSign size={22} />}
+              icon={<DollarSign size={20} />}
               color="red"
               subtitle={`de ${bookings.length} agendamentos`}
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* Receita por quadra */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <Flag size={16} className="text-green-600" />
-                Receita por quadra
-              </h2>
+            <Panel title="Receita por quadra">
               {Object.keys(byCourt).length === 0 ? (
-                <p className="text-sm text-gray-400 py-4 text-center">Sem agendamentos neste mês</p>
+                <p className="text-sm text-muted py-6 text-center">Sem agendamentos neste mês</p>
               ) : (
                 <div className="space-y-3">
                   {Object.values(byCourt)
@@ -200,98 +197,97 @@ export default function RelatorioPage() {
                     .map(court => (
                       <div key={court.name} className="flex items-center gap-3">
                         <div className="flex-1">
-                          <div className="flex justify-between text-sm mb-1">
-                            <span className="font-medium text-gray-800">{court.name}</span>
-                            <span className="font-bold text-gray-900">{fmt(court.revenue)}</span>
+                          <div className="flex justify-between text-sm mb-1.5">
+                            <span className="font-medium text-ink">{court.name}</span>
+                            <span className="font-bold text-ink">{fmt(court.revenue)}</span>
                           </div>
-                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-surface-2 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-green-500 rounded-full"
+                              className="h-full bg-success rounded-full"
                               style={{ width: `${Math.min((court.revenue / bookingRevenue) * 100, 100)}%` }}
                             />
                           </div>
-                          <p className="text-xs text-gray-400 mt-0.5">{court.count} agendamento{court.count !== 1 ? 's' : ''}</p>
+                          <p className="text-xs text-muted mt-1">
+                            {court.count} agendamento{court.count !== 1 ? 's' : ''}
+                          </p>
                         </div>
                       </div>
                     ))}
                 </div>
               )}
-            </div>
+            </Panel>
 
             {/* Vendas por forma de pagamento */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <ShoppingCart size={16} className="text-purple-600" />
-                Vendas por forma de pagamento
-              </h2>
+            <Panel title="Vendas por forma de pagamento">
               {Object.keys(byPayment).length === 0 ? (
-                <p className="text-sm text-gray-400 py-4 text-center">Sem vendas neste mês</p>
+                <p className="text-sm text-muted py-6 text-center">Sem vendas neste mês</p>
               ) : (
                 <div className="space-y-3">
                   {Object.entries(byPayment)
                     .sort((a, b) => b[1] - a[1])
                     .map(([pm, value]) => (
-                      <div key={pm} className="flex items-center justify-between">
-                        <span className="text-sm text-gray-700">
+                      <div key={pm} className="flex items-center justify-between py-1">
+                        <span className="text-sm text-muted">
                           {PAYMENT_METHODS[pm as keyof typeof PAYMENT_METHODS] ?? pm}
                         </span>
-                        <span className="font-semibold text-gray-900">{fmt(value)}</span>
+                        <span className="font-semibold text-ink">{fmt(value)}</span>
                       </div>
                     ))}
-                  <div className="border-t border-gray-100 pt-2 flex justify-between">
-                    <span className="text-sm font-medium text-gray-600">Total vendas</span>
-                    <span className="font-bold text-purple-600">{fmt(salesRevenue)}</span>
+                  <div className="border-t border-line pt-3 flex justify-between">
+                    <span className="text-sm font-medium text-muted">Total vendas</span>
+                    <span className="font-bold text-brand">{fmt(salesRevenue)}</span>
                   </div>
                 </div>
               )}
-            </div>
+            </Panel>
           </div>
 
           {/* Receita diária */}
           {Object.keys(dailyRevenue).length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-5">
-              <h2 className="font-semibold text-gray-900 mb-4">Receita diária</h2>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
+            <Panel title="Receita diária">
+              <div className="divide-y divide-line max-h-64 overflow-y-auto -mx-5 px-5">
                 {Object.entries(dailyRevenue)
                   .sort((a, b) => b[0].localeCompare(a[0]))
                   .map(([date, value]) => (
-                    <div key={date} className="flex items-center justify-between py-1.5 border-b border-gray-50">
-                      <span className="text-sm text-gray-600">
+                    <div key={date} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                      <span className="text-sm text-muted capitalize">
                         {format(parseISO(date), "EEEE, dd/MM", { locale: ptBR })}
                       </span>
-                      <span className="font-medium text-gray-900">{fmt(value)}</span>
+                      <span className="font-semibold text-ink">{fmt(value)}</span>
                     </div>
                   ))}
               </div>
-            </div>
+            </Panel>
           )}
 
           {/* Lista de agendamentos do mês */}
-          <div className="bg-white rounded-xl border border-gray-200">
-            <div className="p-4 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-900">Todos os agendamentos do mês</h2>
-              <p className="text-xs text-gray-400 mt-0.5">{bookings.length} no total · {confirmedBookings.length} confirmados · {cancelledBookings.length} cancelados</p>
+          <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card overflow-hidden">
+            <div className="px-5 pt-5 pb-3 border-b border-line">
+              <h2 className="text-base font-semibold text-ink">Todos os agendamentos do mês</h2>
+              <p className="text-xs text-muted mt-0.5">
+                {bookings.length} no total · {confirmedBookings.length} confirmados · {cancelledBookings.length} cancelados
+              </p>
             </div>
             {bookings.length === 0 ? (
-              <p className="text-center text-gray-400 text-sm py-8">Nenhum agendamento neste mês</p>
+              <p className="text-center text-muted text-sm py-10">Nenhum agendamento neste mês</p>
             ) : (
-              <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
+              <div className="divide-y divide-line max-h-80 overflow-y-auto">
                 {bookings
                   .sort((a, b) => a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime))
                   .map(b => {
                     const statusColor = b.status === 'confirmado' ? 'green' : b.status === 'pendente' ? 'yellow' : 'red'
                     const statusLabel = b.status === 'confirmado' ? 'Confirmado' : b.status === 'pendente' ? 'Pendente' : 'Cancelado'
                     return (
-                      <div key={b.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-                        <div className="w-24 shrink-0 text-gray-500 font-mono">
+                      <div key={b.id} className="flex items-center gap-3 px-5 py-3 hover:bg-surface-2/40 transition-colors">
+                        <div className="w-24 shrink-0 text-xs font-mono text-muted">
                           {format(parseISO(b.date), 'dd/MM')} {b.startTime}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-900 truncate">{b.clientName}</p>
-                          <p className="text-xs text-gray-400">{b.courtName}</p>
+                          <p className="text-sm font-medium text-ink truncate">{b.clientName}</p>
+                          <p className="text-xs text-muted">{b.courtName}</p>
                         </div>
-                        <Badge variant={statusColor as any}>{statusLabel}</Badge>
-                        <span className={`font-medium w-20 text-right ${b.status === 'cancelado' ? 'text-gray-300 line-through' : 'text-gray-900'}`}>
+                        <Badge variant={statusColor as 'green' | 'yellow' | 'red'}>{statusLabel}</Badge>
+                        <span className={`text-sm font-semibold w-20 text-right tabular-nums ${b.status === 'cancelado' ? 'text-subtle line-through' : 'text-ink'}`}>
                           {fmt(b.value)}
                         </span>
                       </div>

@@ -77,121 +77,145 @@ export default function EstoquePage() {
   const lowStock = products.filter(p => p.status === 'ativo' && p.quantity <= p.minStock)
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Estoque</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{products.filter(p => p.status === 'ativo').length} produto{products.filter(p => p.status === 'ativo').length !== 1 ? 's' : ''} ativo{products.filter(p => p.status === 'ativo').length !== 1 ? 's' : ''}</p>
+          <h1 className="text-2xl font-bold text-ink">Estoque</h1>
+          <p className="text-sm text-muted mt-0.5">
+            {products.filter(p => p.status === 'ativo').length} produto{products.filter(p => p.status === 'ativo').length !== 1 ? 's' : ''} ativo{products.filter(p => p.status === 'ativo').length !== 1 ? 's' : ''}
+          </p>
         </div>
-        <Button onClick={openNew}>+ Novo Produto</Button>
+        <Button variant="primary" size="md" onClick={openNew}>
+          <Package size={16} /> Novo produto
+        </Button>
       </div>
 
+      {/* Banner estoque baixo */}
       {lowStock.length > 0 && (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-start gap-3">
-          <AlertTriangle size={18} className="text-amber-600 mt-0.5 shrink-0" />
+        <div className="bg-warning/10 border border-warning/20 rounded-[var(--radius-card)] p-4 flex items-start gap-3">
+          <AlertTriangle size={18} className="text-[#b45309] mt-0.5 shrink-0" />
           <div>
-            <p className="text-sm font-medium text-amber-800">
+            <p className="text-sm font-semibold text-[#b45309]">
               {lowStock.length} produto{lowStock.length !== 1 ? 's' : ''} com estoque baixo
             </p>
-            <p className="text-xs text-amber-600 mt-0.5">
+            <p className="text-xs text-[#b45309]/80 mt-0.5">
               {lowStock.map(p => p.name).join(', ')}
             </p>
           </div>
         </div>
       )}
 
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 flex-1 min-w-48">
-          <Search size={15} className="text-gray-400 shrink-0" />
+      {/* Filtros */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2 bg-surface border border-line rounded-[var(--radius-ctl)] px-3 py-2 flex-1 min-w-48">
+          <Search size={15} className="text-subtle shrink-0" />
           <input
             type="text"
             placeholder="Buscar produto ou categoria..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="text-sm outline-none bg-transparent placeholder-gray-400 w-full"
+            className="text-sm outline-none bg-transparent placeholder:text-subtle text-ink w-full"
           />
         </div>
-        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer whitespace-nowrap">
+        <label className="flex items-center gap-2 text-sm text-muted cursor-pointer whitespace-nowrap select-none">
           <input
             type="checkbox"
             checked={showInactive}
             onChange={e => setShowInactive(e.target.checked)}
-            className="rounded"
+            className="rounded accent-primary"
           />
           Mostrar inativos
         </label>
       </div>
 
+      {/* Conteúdo */}
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-line border-t-brand" />
         </div>
       ) : visible.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
-          <Package size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="text-lg mb-2">Nenhum produto cadastrado</p>
-          <Button onClick={openNew}>Cadastrar produto</Button>
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-12 text-center">
+          <div className="w-12 h-12 rounded-[var(--radius-ctl)] bg-surface-2 flex items-center justify-center mx-auto mb-4">
+            <Package size={24} className="text-subtle" />
+          </div>
+          <p className="text-base font-medium text-ink mb-1">Nenhum produto encontrado</p>
+          <p className="text-sm text-muted mb-4">Cadastre o primeiro produto para controlar o estoque.</p>
+          <Button variant="primary" size="md" onClick={openNew}>Cadastrar produto</Button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Produto</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600 hidden sm:table-cell">Categoria</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Estoque</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600 hidden md:table-cell">Custo</th>
-                <th className="text-right px-4 py-3 font-medium text-gray-600">Preço venda</th>
-                <th className="px-4 py-3 font-medium text-gray-600">Status</th>
-                <th className="px-4 py-3" />
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {visible.map(product => {
-                const { variant, label } = statusBadge(product.status)
-                const isLow = product.status === 'ativo' && product.quantity <= product.minStock
-                return (
-                  <tr key={product.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        {isLow && <AlertTriangle size={14} className="text-amber-500 shrink-0" />}
-                        <span className="font-medium text-gray-900">{product.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{product.category}</td>
-                    <td className="px-4 py-3 text-right">
-                      <span className={isLow ? 'text-red-600 font-bold' : 'text-gray-700'}>
-                        {product.quantity}
-                      </span>
-                      <span className="text-gray-400 text-xs ml-1">/ mín {product.minStock}</span>
-                    </td>
-                    <td className="px-4 py-3 text-right text-gray-500 hidden md:table-cell">
-                      R$ {product.costPrice.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium text-gray-900">
-                      R$ {product.salePrice.toFixed(2)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge variant={variant}>{label}</Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-1 justify-end">
-                        <Button size="sm" variant="ghost" onClick={() => openEdit(product)}>
-                          <Edit size={14} />
-                        </Button>
-                        <Button size="sm" variant="ghost" onClick={() => toggleStatus(product)}>
-                          <Power size={14} />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card overflow-hidden">
+          {/* Tabela: visível em sm+ */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line bg-surface-2/60">
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Produto</th>
+                  <th className="text-left px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide hidden sm:table-cell">Categoria</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Estoque</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide hidden md:table-cell">Custo</th>
+                  <th className="text-right px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Preço venda</th>
+                  <th className="px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wide">Status</th>
+                  <th className="px-4 py-3 w-20" />
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {visible.map(product => {
+                  const { variant, label } = statusBadge(product.status)
+                  const isLow = product.status === 'ativo' && product.quantity <= product.minStock
+                  return (
+                    <tr key={product.id} className="hover:bg-surface-2/40 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-[var(--radius-ctl)] bg-surface-2 flex items-center justify-center shrink-0">
+                            <Package size={13} className={isLow ? 'text-[#b45309]' : 'text-subtle'} />
+                          </div>
+                          <span className="font-medium text-ink">{product.name}</span>
+                          {isLow && (
+                            <AlertTriangle size={13} className="text-[#b45309] shrink-0" />
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted hidden sm:table-cell">{product.category}</td>
+                      <td className="px-4 py-3 text-right">
+                        <span className={isLow ? 'font-bold text-danger' : 'text-ink'}>
+                          {product.quantity}
+                        </span>
+                        {isLow ? (
+                          <Badge variant="yellow" className="ml-2">Mín. {product.minStock}</Badge>
+                        ) : (
+                          <span className="text-subtle text-xs ml-1">/ mín {product.minStock}</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-right text-muted hidden md:table-cell">
+                        R$ {product.costPrice.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3 text-right font-semibold text-ink">
+                        R$ {product.salePrice.toFixed(2)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={variant}>{label}</Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1 justify-end">
+                          <Button size="sm" variant="ghost" onClick={() => openEdit(product)}>
+                            <Edit size={14} />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => toggleStatus(product)}>
+                            <Power size={14} />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
+      {/* Modal criar / editar */}
       <Modal open={modal} onClose={() => setModal(false)} title={editing ? 'Editar produto' : 'Novo produto'}>
         <div className="space-y-4">
           <Input
@@ -249,7 +273,7 @@ export default function EstoquePage() {
             <option value="inativo">Inativo</option>
           </Select>
           <div className="flex gap-3 pt-2">
-            <Button onClick={handleSave} loading={saving} className="flex-1">
+            <Button variant="primary" onClick={handleSave} loading={saving} className="flex-1">
               {editing ? 'Salvar alterações' : 'Cadastrar produto'}
             </Button>
             <Button variant="secondary" onClick={() => setModal(false)} className="flex-1">

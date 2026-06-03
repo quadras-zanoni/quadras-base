@@ -15,8 +15,8 @@ import { ptBR } from 'date-fns/locale'
 
 const typeConfig = {
   entrada: { label: 'Entrada', color: 'green' as const, icon: ArrowDown },
-  saida: { label: 'Saída', color: 'red' as const, icon: ArrowUp },
-  ajuste: { label: 'Ajuste', color: 'blue' as const, icon: RefreshCw },
+  saida:   { label: 'Saída',   color: 'red'    as const, icon: ArrowUp },
+  ajuste:  { label: 'Ajuste',  color: 'violet' as const, icon: RefreshCw },
 }
 
 export default function MovimentacoesPage() {
@@ -59,67 +59,104 @@ export default function MovimentacoesPage() {
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Movimentações de Estoque</h1>
-          <p className="text-sm text-gray-500 mt-0.5">{movements.length} movimentação{movements.length !== 1 ? 'ões' : ''} registrada{movements.length !== 1 ? 's' : ''}</p>
+          <h1 className="text-2xl font-bold text-ink">Movimentações de Estoque</h1>
+          <p className="text-sm text-muted mt-0.5">
+            {movements.length} movimentação{movements.length !== 1 ? 'ões' : ''} registrada{movements.length !== 1 ? 's' : ''}
+          </p>
         </div>
-        <Button onClick={() => setModal(true)}>+ Nova Movimentação</Button>
+        <Button variant="primary" size="md" onClick={() => setModal(true)}>
+          <ArrowLeftRight size={16} /> Nova Movimentação
+        </Button>
       </div>
 
+      {/* Conteúdo */}
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-line border-t-brand" />
         </div>
       ) : movements.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center text-gray-400">
-          <ArrowLeftRight size={40} className="mx-auto mb-3 opacity-30" />
-          <p className="text-lg">Nenhuma movimentação registrada</p>
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-12 text-center">
+          <div className="w-12 h-12 rounded-[var(--radius-ctl)] bg-surface-2 flex items-center justify-center mx-auto mb-4">
+            <ArrowLeftRight size={24} className="text-subtle" />
+          </div>
+          <p className="text-base font-medium text-ink mb-1">Nenhuma movimentação registrada</p>
+          <p className="text-sm text-muted">Registre a primeira entrada ou saída de estoque.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
-          {movements.map(m => {
-            const cfg = typeConfig[m.type]
-            const Icon = cfg.icon
-            const date = m.createdAt ? new Date(m.createdAt) : null
-            return (
-              <div key={m.id} className="flex items-center gap-4 px-4 py-3">
-                <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                  m.type === 'entrada' ? 'bg-green-100' : m.type === 'saida' ? 'bg-red-100' : 'bg-blue-100'
-                }`}>
-                  <Icon size={16} className={
-                    m.type === 'entrada' ? 'text-green-600' : m.type === 'saida' ? 'text-red-600' : 'text-blue-600'
-                  } />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-medium text-gray-900">{m.productName}</span>
-                    <Badge variant={cfg.color}>{cfg.label}</Badge>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-0.5">{m.reason}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className={`font-semibold ${
-                    m.type === 'entrada' ? 'text-green-600' : m.type === 'saida' ? 'text-red-600' : 'text-blue-600'
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card overflow-hidden">
+          {/* Cabeçalho da lista */}
+          <div className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-2.5 border-b border-line bg-surface-2/60">
+            <span className="text-xs font-semibold text-muted uppercase tracking-wide w-9" />
+            <span className="text-xs font-semibold text-muted uppercase tracking-wide">Produto / Motivo</span>
+            <span className="text-xs font-semibold text-muted uppercase tracking-wide hidden sm:block">Data</span>
+            <span className="text-xs font-semibold text-muted uppercase tracking-wide text-right">Qtd</span>
+          </div>
+
+          <div className="divide-y divide-line">
+            {movements.map(m => {
+              const cfg = typeConfig[m.type]
+              const Icon = cfg.icon
+              const date = m.createdAt ? new Date(m.createdAt) : null
+              return (
+                <div key={m.id} className="grid grid-cols-[auto_1fr_auto] sm:grid-cols-[auto_1fr_auto_auto] items-center gap-3 px-4 py-3 hover:bg-surface-2/40 transition-colors">
+                  {/* Ícone */}
+                  <div className={`w-9 h-9 rounded-[var(--radius-ctl)] flex items-center justify-center shrink-0 ${
+                    m.type === 'entrada' ? 'bg-success/10' : m.type === 'saida' ? 'bg-danger/10' : 'bg-violet/10'
                   }`}>
-                    {m.type === 'entrada' ? '+' : m.type === 'saida' ? '-' : ''}{m.quantity}
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    {m.previousQuantity} → {m.newQuantity}
-                  </p>
-                  {date && (
-                    <p className="text-xs text-gray-300">
-                      {format(date, "dd/MM 'às' HH:mm", { locale: ptBR })}
+                    <Icon size={15} className={
+                      m.type === 'entrada' ? 'text-success' : m.type === 'saida' ? 'text-danger' : 'text-violet'
+                    } />
+                  </div>
+
+                  {/* Produto + Badge + motivo */}
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-ink truncate">{m.productName}</span>
+                      <Badge variant={
+                        m.type === 'entrada' ? 'green' : m.type === 'saida' ? 'red' : 'violet'
+                      }>{cfg.label}</Badge>
+                    </div>
+                    <p className="text-xs text-muted mt-0.5 truncate">{m.reason}</p>
+                  </div>
+
+                  {/* Data — oculta em mobile */}
+                  <div className="hidden sm:block text-right shrink-0">
+                    {date && (
+                      <p className="text-xs text-subtle">
+                        {format(date, "dd/MM 'às' HH:mm", { locale: ptBR })}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted mt-0.5">
+                      {m.previousQuantity} → {m.newQuantity}
                     </p>
-                  )}
+                  </div>
+
+                  {/* Quantidade */}
+                  <div className="text-right shrink-0">
+                    <p className={`font-semibold tabular-nums ${
+                      m.type === 'entrada' ? 'text-success' : m.type === 'saida' ? 'text-danger' : 'text-violet'
+                    }`}>
+                      {m.type === 'entrada' ? '+' : m.type === 'saida' ? '-' : ''}{m.quantity}
+                    </p>
+                    {/* Fallback de data p/ mobile */}
+                    {date && (
+                      <p className="text-[10px] text-subtle mt-0.5 sm:hidden">
+                        {format(date, 'dd/MM HH:mm', { locale: ptBR })}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       )}
 
+      {/* Modal nova movimentação */}
       <Modal open={modal} onClose={() => setModal(false)} title="Nova Movimentação">
         <div className="space-y-4">
           <Select
@@ -154,9 +191,11 @@ export default function MovimentacoesPage() {
           />
 
           {selectedProduct && type !== 'ajuste' && (
-            <p className="text-xs text-gray-500">
-              Estoque atual: <strong>{selectedProduct.quantity}</strong> →
-              Após movimentação: <strong>
+            <p className="text-xs text-muted bg-surface-2 rounded-[var(--radius-ctl)] px-3 py-2">
+              Estoque atual: <strong className="text-ink">{selectedProduct.quantity}</strong>
+              {' → '}
+              Após movimentação:{' '}
+              <strong className={type === 'entrada' ? 'text-success' : 'text-danger'}>
                 {type === 'entrada'
                   ? selectedProduct.quantity + quantity
                   : selectedProduct.quantity - quantity}
@@ -171,8 +210,8 @@ export default function MovimentacoesPage() {
             placeholder="Ex: Compra do fornecedor, perda, inventário..."
           />
 
-          <div className="flex gap-3">
-            <Button onClick={handleSave} loading={saving} className="flex-1">
+          <div className="flex gap-3 pt-2">
+            <Button variant="primary" onClick={handleSave} loading={saving} className="flex-1">
               Registrar
             </Button>
             <Button variant="secondary" onClick={() => setModal(false)} className="flex-1">
