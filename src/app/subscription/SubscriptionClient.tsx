@@ -94,10 +94,8 @@ export default function SubscriptionClient({
 
         {/* Logo + marca */}
         <div className="flex flex-col items-center gap-3 mb-8">
-          <div className="rounded-[var(--radius-card)] bg-[#0b0e0b] p-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-arena.jpg" alt="Arena do Parque" className="h-20 w-auto rounded" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-arena-branca.png" alt="Arena do Parque" className="h-28 w-auto" />
         </div>
 
         {/* Badge de aviso */}

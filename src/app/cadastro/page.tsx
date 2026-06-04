@@ -42,12 +42,8 @@ export default function CadastroPage() {
 
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="rounded-[var(--radius-card)] bg-[#0b0e0b] p-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-arena.jpg" alt="Arena do Parque" className="h-16 w-auto rounded" />
-            </div>
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-arena-branca.png" alt="Arena do Parque" className="h-32 w-auto" />
         </div>
 
         {/* Card */}

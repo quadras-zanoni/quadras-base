@@ -309,10 +309,8 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
       {/* Header */}
       <header className="sticky top-0 z-10 bg-surface border-b border-line">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
-          <div className="rounded-[var(--radius-ctl)] bg-[#0b0e0b] p-1.5 shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-arena.jpg" alt="Arena do Parque" className="h-11 w-auto rounded" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-arena-branca.png" alt="Arena do Parque" className="h-12 w-auto shrink-0" />
           <div>
             <h1 className="font-bold text-sm tracking-tight text-ink">Arena do Parque</h1>
             <p className="text-[11px] text-muted">Reserve sua quadra de beach tennis</p>

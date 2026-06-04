@@ -102,11 +102,9 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
   return (
     <>
       {/* Brand */}
-      <div className="px-4 mb-6">
-        <div className="rounded-[var(--radius-card)] bg-[#0b0e0b] p-2.5 flex items-center justify-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-arena.jpg" alt="Arena do Parque" className="w-full max-w-[170px] h-auto rounded-md" />
-        </div>
+      <div className="px-4 mb-6 flex justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-arena-branca.png" alt="Arena do Parque" className="h-20 w-auto" />
       </div>
 
       {/* Navigation */}
