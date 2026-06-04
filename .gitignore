@@ -43,5 +43,6 @@ next-env.d.ts
 
 .vercel
 
-# Claude — assets de trabalho
+# Claude — assets de trabalho (local, não vai pro repo do Zanoni)
 shots/
+CONTEXTO.md
