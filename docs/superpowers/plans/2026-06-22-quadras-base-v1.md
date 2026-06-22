@@ -4,7 +4,7 @@
 
 **Goal:** Build the v1 of `quadras-base`, a single multi-tenant Next.js + Supabase SaaS for managing sports-arena courts, scheduling, customers, inventory, sales and financial reporting, with a public no-login booking link per tenant.
 
-**Architecture:** One Next.js (App Router, TypeScript) app deployed on Vercel, one Supabase project (Postgres + Auth) shared by all tenants, isolated by `tenant_id` + Row Level Security. Tenant is resolved per-request from the subdomain by `middleware.ts`. Money is stored as integer centavos everywhere. Stock is only ever changed through `movimentacoes_estoque` rows, enforced by a DB trigger that updates `produtos.quantidade_estoque` — application code never writes that column directly.
+**Architecture:** One Next.js (App Router, TypeScript) app deployed on Vercel, one Supabase project (Postgres + Auth) shared by all tenants, isolated by `tenant_id` + Row Level Security. Tenant is resolved per-request from the subdomain by `proxy.ts` (Next.js 16 renamed the `middleware.ts` convention to `proxy.ts` — this project uses the current name throughout). Money is stored as integer centavos everywhere. Stock is only ever changed through `movimentacoes_estoque` rows, enforced by a DB trigger that updates `produtos.quantidade_estoque` — application code never writes that column directly.
 
 **Tech Stack:** Next.js (App Router) + TypeScript, Tailwind CSS, Supabase (`@supabase/supabase-js`, `@supabase/ssr`), Zod, Vitest, deployed on Vercel.
 
@@ -484,13 +484,13 @@ git commit -m "feat: add RLS policies and cross-tenant isolation check"
 **Files:**
 - Create: `src/lib/supabase/server.ts`, `src/lib/supabase/admin.ts`
 - Create: `src/lib/tenant.ts`, `src/lib/tenant.test.ts`
-- Create: `src/middleware.ts`
+- Create: `src/proxy.ts` (Next.js 16 renamed the `middleware.ts` file convention to `proxy.ts` — use the current name; if you're on an older Next.js this is still called `middleware.ts` with an exported `middleware` function instead of `proxy`)
 - Modify: `.env.example` (add real values are filled locally, not committed)
 
 **Interfaces:**
 - Produces: `createClient()` (server, cookie-aware, RLS-respecting), `createAdminClient()` (service role, bypasses RLS — server-only, never imported by client components).
 - Produces: `resolverTenantSlug(host: string): string`, `buscarTenantPorSlug(slug: string): Promise<Tenant | null>`, `Tenant` type — every page/route that needs the current tenant uses these.
-- Produces: middleware sets request/response header `x-tenant-slug` — later tasks read it via `headers().get("x-tenant-slug")`.
+- Produces: the proxy sets request/response header `x-tenant-slug` — later tasks read it via `headers().get("x-tenant-slug")`.
 
 - [ ] **Step 1: Write the failing test for tenant slug resolution**
 
@@ -597,7 +597,7 @@ export async function createClient() {
             );
           } catch {
             // Called from a Server Component render — session refresh
-            // already happened in middleware, safe to ignore here.
+            // already happened in the proxy, safe to ignore here.
           }
         },
       },
@@ -622,15 +622,15 @@ export function createAdminClient() {
 }
 ```
 
-- [ ] **Step 7: Implement the middleware**
+- [ ] **Step 7: Implement the proxy**
 
-Create `src/middleware.ts`:
+Create `src/proxy.ts`:
 ```ts
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { resolverTenantSlug } from "@/lib/tenant";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
   const host = request.headers.get("host") ?? "";
   const tenantSlug = resolverTenantSlug(
@@ -677,6 +677,8 @@ Expected: succeeds with no type errors.
 git add src
 git commit -m "feat: add supabase clients, tenant resolution and middleware"
 ```
+
+(Implemented as `src/proxy.ts` with an exported `proxy` function per the Next.js 16 file-convention rename — see the note on this task's Files list.)
 
 ---
 
@@ -3065,11 +3067,12 @@ git commit -m "feat: add dashboard reusing relatorio helpers"
 - Create: `src/app/(admin)/link-cliente/actions.ts`, `src/app/(admin)/link-cliente/copiar-link-botao.tsx`, `src/app/(admin)/link-cliente/page.tsx`
 - Create: `src/app/api/public/[token]/agendar/route.ts`
 - Create: `src/app/r/[token]/page.tsx`, `src/app/r/[token]/formulario-reserva-publica.tsx`
+- Modify: `src/proxy.ts` (renamed from `middleware.ts` in Task 4 per Next.js 16 convention)
 
 **Interfaces:**
 - Consumes: `temConflito` (Task 8), `createAdminClient` / `buscarTenantPorToken` (Task 4), `createClient` (Task 4).
 - Produces: `gerarLinkWhatsApp(numero: string, mensagem: string): string` — the only place a `wa.me` link is built; Task 16 does not need it.
-- This task's public route never goes through `middleware.ts`'s auth refresh meaningfully (no cookies involved) and is reachable with `status_assinatura = 'bloqueado'` — that gate belongs to the admin app in Task 16, not to the public booking page, since a blocked arena owner should still be able to receive bookings while they pay.
+- This task's public route never goes through `proxy.ts`'s auth refresh meaningfully (no cookies involved) and is reachable with `status_assinatura = 'bloqueado'` — that gate belongs to the admin app in Task 16, not to the public booking page, since a blocked arena owner should still be able to receive bookings while they pay.
 
 - [ ] **Step 1: Allow tenants to update their own row**
 
@@ -3504,9 +3507,9 @@ export default async function PaginaReservaPublica({
 }
 ```
 
-- [ ] **Step 9: Exempt the public route from the middleware's tenant-by-subdomain assumption**
+- [ ] **Step 9: Exempt the public route from the proxy's tenant-by-subdomain assumption**
 
-Modify `src/middleware.ts` — update the `matcher` so the public route still gets the Supabase cookie refresh (harmless, it just won't have a session) but is never blocked by tenant-by-subdomain logic, since `/r/[token]` resolves its tenant from the URL token, not the host:
+Modify `src/proxy.ts` (Next.js 16's renamed `middleware.ts` convention — see Task 4) — update the `matcher` so the public route still gets the Supabase cookie refresh (harmless, it just won't have a session) but is never blocked by tenant-by-subdomain logic, since `/r/[token]` resolves its tenant from the URL token, not the host:
 
 ```ts
 export const config = {
@@ -3534,7 +3537,7 @@ git commit -m "feat: add link do cliente settings and public no-login booking fl
 - Create: `src/lib/subscription.ts`, `src/lib/subscription.test.ts`
 - Create: `src/app/api/subscription/check/route.ts`
 - Create: `src/app/bloqueado/verificar-assinatura-poller.tsx`, `src/app/bloqueado/page.tsx`
-- Modify: `src/middleware.ts`
+- Modify: `src/proxy.ts` (renamed from `middleware.ts` in Task 4 per Next.js 16 convention)
 
 **Interfaces:**
 - Consumes: `buscarTenantPorSlug` (Task 4).
@@ -3607,16 +3610,16 @@ export async function GET(request: Request) {
 }
 ```
 
-- [ ] **Step 6: Add the gate to the middleware**
+- [ ] **Step 6: Add the gate to the proxy**
 
-Replace the body of `src/middleware.ts` with:
+Replace the body of `src/proxy.ts` with:
 ```ts
 import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { resolverTenantSlug, buscarTenantPorSlug } from "@/lib/tenant";
 import { avaliarStatusAssinatura } from "@/lib/subscription";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
   const host = request.headers.get("host") ?? "";
   const tenantSlug = resolverTenantSlug(
