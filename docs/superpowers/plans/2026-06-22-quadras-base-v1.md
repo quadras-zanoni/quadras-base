@@ -1422,10 +1422,31 @@ git commit -m "feat: add pure agenda conflict-check logic with full test coverag
 - Create: `src/lib/validators/agendamento.ts`, `src/lib/validators/agendamento.test.ts`
 - Create: `src/app/(admin)/agendamentos/novo/actions.ts`, `src/app/(admin)/agendamentos/novo/page.tsx`
 - Create: `src/app/(admin)/agenda/actions.ts`, `src/app/(admin)/agenda/page.tsx`
+- Modify: `vitest.config.ts` (add the `@` path alias — see Step 0)
 
 **Interfaces:**
 - Consumes: `temConflito`, `IntervaloHorario` (Task 8), `ClienteInputSchema` shape (Task 7), `createClient()` (Task 4).
 - Produces: nothing consumed by later tasks directly, but Task 14 (Dashboard) queries the same `agendamentos` table with the same column names defined here (matches Task 2 schema exactly — no new columns introduced).
+
+- [ ] **Step 0: Add the `@` alias to Vitest**
+
+This is the first validator file that imports another `src/lib` module via `@/...` (`agendamento.ts` imports `horaParaMinutos` from `@/lib/agenda`). Next.js resolves `@/*` to `./src/*` via `tsconfig.json` automatically, but Vitest does not read `tsconfig.json` paths on its own — without this, the test fails with a module-resolution error, not the expected "Cannot find module './agendamento'" from Step 2. Update `vitest.config.ts`:
+```ts
+import path from "node:path";
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  test: {
+    environment: "node",
+    include: ["src/**/*.test.ts"],
+  },
+});
+```
 
 - [ ] **Step 1: Write the failing validator test**
 
@@ -1497,14 +1518,20 @@ Create `src/lib/validators/agendamento.ts`:
 import { z } from "zod";
 import { horaParaMinutos } from "@/lib/agenda";
 
+// Zod v4's z.string().uuid()/z.uuid() enforce strict RFC4122 variant bits,
+// which the test fixtures' fake UUIDs (e.g. "11111111-1111-...") don't
+// satisfy. Use a permissive shape check instead — same pattern used in
+// every validator file in this project that accepts a uuid string.
+const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export const AgendamentoInputSchema = z
   .object({
-    quadra_id: z.string().uuid(),
+    quadra_id: z.string().regex(uuidRegex),
     data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     hora_inicio: z.string().regex(/^\d{2}:\d{2}$/),
     hora_fim: z.string().regex(/^\d{2}:\d{2}$/),
     recorrente: z.coerce.boolean().default(false),
-    cliente_id: z.string().uuid().optional(),
+    cliente_id: z.string().regex(uuidRegex).optional(),
     cliente_novo_nome: z.string().min(1).optional(),
     cliente_novo_telefone: z.string().min(8).optional(),
   })
@@ -2085,8 +2112,12 @@ Create `src/lib/validators/movimentacao.ts`:
 ```ts
 import { z } from "zod";
 
+// See Task 9's note on why this is a regex, not z.string().uuid()/z.uuid()
+// (Zod v4 enforces strict RFC4122 variant bits the test fixtures don't have).
+const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export const MovimentacaoInputSchema = z.object({
-  produto_id: z.string().uuid(),
+  produto_id: z.string().regex(uuidRegex),
   tipo: z.enum(["entrada", "saida"]),
   quantidade: z.coerce.number().int().positive(),
   motivo: z.string().min(1).default("manual"),
@@ -2332,14 +2363,18 @@ Create `src/lib/validators/venda.ts`:
 ```ts
 import { z } from "zod";
 
+// See Task 9's note on why this is a regex, not z.string().uuid()/z.uuid()
+// (Zod v4 enforces strict RFC4122 variant bits the test fixtures don't have).
+const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export const ItemVendaSchema = z.object({
-  produto_id: z.string().uuid(),
+  produto_id: z.string().regex(uuidRegex),
   quantidade: z.coerce.number().int().positive(),
   preco_unitario_centavos: z.coerce.number().int().nonnegative(),
 });
 
 export const VendaInputSchema = z.object({
-  cliente_id: z.string().uuid().optional(),
+  cliente_id: z.string().regex(uuidRegex).optional(),
   forma_pagamento: z.enum(["dinheiro", "pix", "debito", "credito"]),
   itens: z.array(ItemVendaSchema).min(1, "Adicione ao menos um item"),
 });
@@ -3183,9 +3218,13 @@ Create `src/lib/validators/agendamento-publico.ts`:
 import { z } from "zod";
 import { horaParaMinutos } from "@/lib/agenda";
 
+// See Task 9's note on why this is a regex, not z.string().uuid()/z.uuid()
+// (Zod v4 enforces strict RFC4122 variant bits the test fixtures don't have).
+const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export const AgendamentoPublicoInputSchema = z
   .object({
-    quadra_id: z.string().uuid(),
+    quadra_id: z.string().regex(uuidRegex),
     data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     hora_inicio: z.string().regex(/^\d{2}:\d{2}$/),
     hora_fim: z.string().regex(/^\d{2}:\d{2}$/),
