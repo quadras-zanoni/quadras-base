@@ -3,13 +3,15 @@ import { createServerClient } from "@supabase/ssr";
 import { resolverTenantSlug } from "@/lib/tenant";
 
 export async function proxy(request: NextRequest) {
-  const response = NextResponse.next();
   const host = request.headers.get("host") ?? "";
   const tenantSlug = resolverTenantSlug(
     host,
     process.env.NEXT_PUBLIC_DEV_TENANT_SLUG ?? "base"
   );
-  response.headers.set("x-tenant-slug", tenantSlug);
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-tenant-slug", tenantSlug);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
