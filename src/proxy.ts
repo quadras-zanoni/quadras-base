@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { resolverTenantSlug } from "@/lib/tenant";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const response = NextResponse.next();
   const host = request.headers.get("host") ?? "";
   const tenantSlug = resolverTenantSlug(
