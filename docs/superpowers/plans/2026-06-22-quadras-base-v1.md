@@ -631,13 +631,18 @@ import { createServerClient } from "@supabase/ssr";
 import { resolverTenantSlug } from "@/lib/tenant";
 
 export async function proxy(request: NextRequest) {
-  const response = NextResponse.next();
   const host = request.headers.get("host") ?? "";
   const tenantSlug = resolverTenantSlug(
     host,
     process.env.NEXT_PUBLIC_DEV_TENANT_SLUG ?? "base"
   );
-  response.headers.set("x-tenant-slug", tenantSlug);
+
+  // Headers must be attached via the `request` option below, not via
+  // response.headers.set() after the fact — the latter only reaches the
+  // browser, not headers() in downstream Server Components.
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-tenant-slug", tenantSlug);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -665,6 +670,8 @@ export const config = {
   matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
 ```
+
+(Fixed after Task 5's review found `response.headers.set()` doesn't reach Server Components — see the real implementation note above the Task 4 commit step.)
 
 - [ ] **Step 8: Verify the build**
 
@@ -3620,13 +3627,11 @@ import { resolverTenantSlug, buscarTenantPorSlug } from "@/lib/tenant";
 import { avaliarStatusAssinatura } from "@/lib/subscription";
 
 export async function proxy(request: NextRequest) {
-  const response = NextResponse.next();
   const host = request.headers.get("host") ?? "";
   const tenantSlug = resolverTenantSlug(
     host,
     process.env.NEXT_PUBLIC_DEV_TENANT_SLUG ?? "base"
   );
-  response.headers.set("x-tenant-slug", tenantSlug);
 
   const tenant = await buscarTenantPorSlug(tenantSlug);
   const isBloqueadoPage = request.nextUrl.pathname === "/bloqueado";
@@ -3636,6 +3641,13 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL("/bloqueado", request.url));
     }
   }
+
+  // Headers must be attached via the `request` option below, not via
+  // response.headers.set() after the fact — the latter only reaches the
+  // browser, not headers() in downstream Server Components (Task 4/5 fix).
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-tenant-slug", tenantSlug);
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
