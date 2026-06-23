@@ -6,6 +6,8 @@ export const ClienteInputSchema = z.object({
     .string()
     .transform((valor) => valor.replace(/\D/g, ""))
     .refine((valor) => valor.length >= 8, "Telefone inválido"),
+  cpf: z.string().optional(),
+  endereco: z.string().optional(),
 });
 
 export type ClienteInput = z.infer<typeof ClienteInputSchema>;
