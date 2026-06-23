@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { Link2, MessageCircleMore } from "lucide-react";
 import { buscarTenantPorSlug } from "@/lib/tenant";
 import { atualizarWhatsappAvisos } from "./actions";
 import { CopiarLinkBotao } from "./copiar-link-botao";
@@ -21,12 +22,38 @@ export default async function LinkClientePage() {
       <h1 className="text-xl font-semibold tracking-tight">Link do Cliente</h1>
 
       <Card className="space-y-3">
-        <p className="text-sm text-neutral-500">Seu link de reservas</p>
-        <p className="break-all text-sm">{link}</p>
-        <CopiarLinkBotao link={link} />
+        <div className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100">
+            <Link2 size={16} className="text-neutral-700" />
+          </span>
+          <p className="text-sm font-medium text-neutral-700">Seu link de reservas</p>
+        </div>
+        <p className="text-xs text-neutral-500">
+          Compartilhe esse link com seus clientes pra que eles possam reservar uma quadra online, sem precisar te
+          chamar no WhatsApp.
+        </p>
+        <p className="break-all rounded-lg bg-neutral-50 px-3 py-2 text-sm">{link}</p>
+        <div className="flex gap-2">
+          <CopiarLinkBotao link={link} />
+          <a href={link} target="_blank" rel="noopener noreferrer">
+            <Button type="button" variant="secondary">
+              Abrir
+            </Button>
+          </a>
+        </div>
       </Card>
 
       <Card className="space-y-3">
+        <div className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100">
+            <MessageCircleMore size={16} className="text-neutral-700" />
+          </span>
+          <p className="text-sm font-medium text-neutral-700">WhatsApp de avisos</p>
+        </div>
+        <p className="text-xs text-neutral-500">
+          Toda vez que um cliente reservar pelo link acima, um aviso é enviado automaticamente pra esse número.
+        </p>
+
         {tenant.whatsapp_avisos ? (
           <div className="flex items-center gap-2">
             <Badge tone="success">Ativo</Badge>

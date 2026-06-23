@@ -1,19 +1,31 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import {
+  LayoutDashboard,
+  CalendarDays,
+  CalendarPlus,
+  LandPlot,
+  Users,
+  Package,
+  Boxes,
+  ShoppingCart,
+  BarChart3,
+  Link2,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { NavLink } from "@/components/ui/NavLink";
 
 const NAV = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/agenda", label: "Agenda do Dia" },
-  { href: "/agendamentos/novo", label: "Novo Agendamento" },
-  { href: "/quadras", label: "Quadras" },
-  { href: "/clientes", label: "Clientes" },
-  { href: "/produtos", label: "Produtos" },
-  { href: "/estoque", label: "Estoque" },
-  { href: "/vendas", label: "Vendas" },
-  { href: "/relatorio", label: "Relatório" },
-  { href: "/link-cliente", label: "Link do Cliente" },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/agenda", label: "Agenda do Dia", icon: CalendarDays },
+  { href: "/agendamentos/novo", label: "Novo Agendamento", icon: CalendarPlus },
+  { href: "/quadras", label: "Quadras", icon: LandPlot },
+  { href: "/clientes", label: "Clientes", icon: Users },
+  { href: "/produtos", label: "Produtos", icon: Package },
+  { href: "/estoque", label: "Estoque", icon: Boxes },
+  { href: "/vendas", label: "Vendas", icon: ShoppingCart },
+  { href: "/relatorio", label: "Relatório", icon: BarChart3 },
+  { href: "/link-cliente", label: "Link do Cliente", icon: Link2 },
 ];
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -34,7 +46,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <p className="mb-6 px-3 text-sm font-semibold tracking-tight">{nomeExibicao}</p>
         <nav className="space-y-1">
           {NAV.map((item) => (
-            <NavLink key={item.href} href={item.href} label={item.label} />
+            <NavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />
           ))}
         </nav>
       </aside>
