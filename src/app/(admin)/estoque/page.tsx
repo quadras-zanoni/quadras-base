@@ -1,9 +1,12 @@
+import { Boxes, ArrowRightLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { criarMovimentacao } from "./actions";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function EstoquePage() {
   const supabase = await createClient();
@@ -22,7 +25,7 @@ export default async function EstoquePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold tracking-tight">Estoque</h1>
+      <PageHeader titulo="Estoque" subtitulo={`${movimentacoes?.length ?? 0} movimentações registradas`} />
 
       <Card>
         <form action={criarMovimentacao} className="flex flex-wrap items-end gap-2">
@@ -64,6 +67,13 @@ export default async function EstoquePage() {
       </Card>
 
       <Card className="overflow-hidden p-0">
+        {(produtos?.length ?? 0) === 0 ? (
+          <EmptyState
+            icon={<Boxes size={20} />}
+            titulo="Nenhum produto ativo"
+            descricao="Cadastre produtos na aba Produtos para controlar o estoque aqui."
+          />
+        ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-200 text-left text-neutral-500">
@@ -87,9 +97,17 @@ export default async function EstoquePage() {
             ))}
           </tbody>
         </table>
+        )}
       </Card>
 
       <Card className="overflow-hidden p-0">
+        {(movimentacoes?.length ?? 0) === 0 ? (
+          <EmptyState
+            icon={<ArrowRightLeft size={20} />}
+            titulo="Nenhuma movimentação registrada"
+            descricao="Registre a primeira compra acima para começar o histórico de estoque."
+          />
+        ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-200 text-left text-neutral-500">
@@ -110,15 +128,9 @@ export default async function EstoquePage() {
                 <td>{movimentacao.motivo}</td>
               </tr>
             ))}
-            {movimentacoes?.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-5 py-6 text-neutral-500">
-                  Nenhuma movimentação registrada
-                </td>
-              </tr>
-            ) : null}
           </tbody>
         </table>
+        )}
       </Card>
     </div>
   );

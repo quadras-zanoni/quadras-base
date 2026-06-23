@@ -1,3 +1,4 @@
+import { Wallet, LandPlot, Package, XCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { centavosParaReais } from "@/lib/money";
 import { hojeISO, inicioDoDiaUTC, limitesDoMes } from "@/lib/timezone";
@@ -10,6 +11,7 @@ import {
   type AgendamentoReceita,
 } from "@/lib/relatorio";
 import { StatCard, Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 
 export default async function RelatorioPage() {
   const supabase = await createClient();
@@ -45,15 +47,24 @@ export default async function RelatorioPage() {
   const porQuadra = receitaPorQuadra(agendamentos);
   const porFormaPagamento = agruparVendasPorFormaPagamento(vendas ?? []);
 
+  const mesFormatado = new Date(`${inicioMes}T00:00:00`).toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold tracking-tight">Relatório Financeiro</h1>
+      <PageHeader titulo="Relatório Financeiro" subtitulo={<span className="capitalize">{mesFormatado}</span>} />
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Receita do mês" value={centavosParaReais(receitaQuadras + receitaProdutos)} />
-        <StatCard label="Receita de quadras" value={centavosParaReais(receitaQuadras)} />
-        <StatCard label="Receita de produtos" value={centavosParaReais(receitaProdutos)} />
-        <StatCard label="Cancelamentos" value={cancelamentos} />
+        <StatCard
+          label="Receita do mês"
+          value={centavosParaReais(receitaQuadras + receitaProdutos)}
+          icon={<Wallet size={16} />}
+        />
+        <StatCard label="Receita de quadras" value={centavosParaReais(receitaQuadras)} icon={<LandPlot size={16} />} />
+        <StatCard label="Receita de produtos" value={centavosParaReais(receitaProdutos)} icon={<Package size={16} />} />
+        <StatCard label="Cancelamentos" value={cancelamentos} icon={<XCircle size={16} />} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

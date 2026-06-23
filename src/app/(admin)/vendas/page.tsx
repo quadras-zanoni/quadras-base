@@ -1,8 +1,11 @@
+import { ShoppingCart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { centavosParaReais } from "@/lib/money";
 import { hojeISO, inicioDoDiaUTC } from "@/lib/timezone";
 import { NovaVendaForm } from "./nova-venda-form";
 import { Card } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function VendasPage() {
   const supabase = await createClient();
@@ -18,13 +21,25 @@ export default async function VendasPage() {
       .order("criado_em", { ascending: false }),
   ]);
 
+  const totalHoje = (vendas ?? []).reduce((soma, venda) => soma + venda.valor_total_centavos, 0);
+
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold tracking-tight">Vendas</h1>
+      <PageHeader
+        titulo="Vendas"
+        subtitulo={`Hoje: ${vendas?.length ?? 0} venda${vendas?.length === 1 ? "" : "s"} · ${centavosParaReais(totalHoje)}`}
+      />
 
       <NovaVendaForm produtos={produtos ?? []} clientes={clientes ?? []} />
 
       <Card className="overflow-hidden p-0">
+        {(vendas?.length ?? 0) === 0 ? (
+          <EmptyState
+            icon={<ShoppingCart size={20} />}
+            titulo="Nenhuma venda registrada"
+            descricao="Registre a primeira venda do dia acima."
+          />
+        ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-200 text-left text-neutral-500">
@@ -41,15 +56,9 @@ export default async function VendasPage() {
                 <td>{centavosParaReais(venda.valor_total_centavos)}</td>
               </tr>
             ))}
-            {vendas?.length === 0 ? (
-              <tr>
-                <td colSpan={3} className="px-5 py-6 text-neutral-500">
-                  Nenhuma venda registrada hoje
-                </td>
-              </tr>
-            ) : null}
           </tbody>
         </table>
+        )}
       </Card>
     </div>
   );

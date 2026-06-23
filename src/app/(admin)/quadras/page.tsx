@@ -1,3 +1,4 @@
+import { LandPlot } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { centavosParaReais } from "@/lib/money";
 import { ESPORTES_DISPONIVEIS } from "@/lib/esportes";
@@ -7,6 +8,8 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function QuadrasPage({
   searchParams,
@@ -20,9 +23,11 @@ export default async function QuadrasPage({
     .select("id, nome, tipos_esporte, preco_hora_centavos, ativa")
     .order("nome");
 
+  const total = quadras?.length ?? 0;
+
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold tracking-tight">Quadras</h1>
+      <PageHeader titulo="Quadras" subtitulo={`${total} quadra${total === 1 ? "" : "s"} cadastrada${total === 1 ? "" : "s"}`} />
       {erro ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p> : null}
 
       <Card>
@@ -52,6 +57,13 @@ export default async function QuadrasPage({
       </Card>
 
       <Card className="overflow-hidden p-0">
+        {total === 0 ? (
+          <EmptyState
+            icon={<LandPlot size={20} />}
+            titulo="Nenhuma quadra cadastrada"
+            descricao="Cadastre a primeira quadra acima para começar a receber agendamentos."
+          />
+        ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-200 text-left text-neutral-500">
@@ -90,6 +102,7 @@ export default async function QuadrasPage({
             ))}
           </tbody>
         </table>
+        )}
       </Card>
     </div>
   );

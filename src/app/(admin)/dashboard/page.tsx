@@ -1,3 +1,4 @@
+import { CalendarCheck, CheckCircle2, DollarSign, Gauge, LandPlot } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { centavosParaReais } from "@/lib/money";
 import { hojeISO } from "@/lib/timezone";
@@ -44,19 +45,30 @@ export default async function DashboardPage() {
   );
   const receitaHoje = receitaTotalAgendamentos(agendamentosHoje);
 
+  const dataFormatada = new Date(`${hoje}T00:00:00`).toLocaleDateString("pt-BR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold tracking-tight">Boa tarde, Administrador!</h1>
+      <div>
+        <h1 className="text-xl font-semibold tracking-tight">Boa tarde, Administrador!</h1>
+        <p className="mt-1 text-sm capitalize text-neutral-500">{dataFormatada}</p>
+      </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-        <StatCard label="Agendamentos hoje" value={agendamentosHoje.length} />
-        <StatCard label="Confirmados" value={confirmadosHoje.length} />
-        <StatCard label="Receita do dia" value={centavosParaReais(receitaHoje)} />
+        <StatCard label="Agendamentos hoje" value={agendamentosHoje.length} icon={<CalendarCheck size={16} />} />
+        <StatCard label="Confirmados" value={confirmadosHoje.length} icon={<CheckCircle2 size={16} />} />
+        <StatCard label="Receita do dia" value={centavosParaReais(receitaHoje)} icon={<DollarSign size={16} />} />
         <StatCard
           label="Taxa de ocupação"
           value={`${(taxaOcupacao(horasReservadasHoje, quadrasAtivas.length) * 100).toFixed(0)}%`}
+          icon={<Gauge size={16} />}
         />
-        <StatCard label="Quadras ativas" value={quadrasAtivas.length} />
+        <StatCard label="Quadras ativas" value={quadrasAtivas.length} icon={<LandPlot size={16} />} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">

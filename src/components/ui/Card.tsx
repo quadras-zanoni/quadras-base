@@ -16,9 +16,22 @@ export function Card({
   );
 }
 
-export function StatCard({ label, value }: { label: string; value: ReactNode }) {
+export function StatCard({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: ReactNode;
+  icon?: ReactNode;
+}) {
   return (
     <Card className="p-4">
+      {icon ? (
+        <span className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-neutral-100 text-neutral-600">
+          {icon}
+        </span>
+      ) : null}
       <p className="text-xs font-medium text-neutral-500">{label}</p>
       <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
     </Card>

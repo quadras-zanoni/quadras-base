@@ -1,5 +1,5 @@
 import { headers } from "next/headers";
-import { Link2, MessageCircleMore } from "lucide-react";
+import { Link2, MessageCircleMore, CheckCircle2 } from "lucide-react";
 import { buscarTenantPorSlug } from "@/lib/tenant";
 import { atualizarWhatsappAvisos } from "./actions";
 import { CopiarLinkBotao } from "./copiar-link-botao";
@@ -87,6 +87,24 @@ export default async function LinkClientePage() {
           </div>
           <Button type="submit">Salvar</Button>
         </form>
+      </Card>
+
+      <Card className="space-y-3">
+        <p className="text-sm font-medium text-neutral-700">Como funciona</p>
+        <ul className="space-y-2">
+          {[
+            "O cliente abre o link e escolhe a quadra",
+            "Escolhe o dia e o horário disponível",
+            "Preenche o nome e o WhatsApp e confirma",
+            "A reserva já aparece na sua Agenda do Dia",
+            "Você recebe um aviso no WhatsApp configurado acima",
+          ].map((passo) => (
+            <li key={passo} className="flex items-start gap-2 text-sm text-neutral-600">
+              <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-neutral-400" />
+              {passo}
+            </li>
+          ))}
+        </ul>
       </Card>
     </div>
   );

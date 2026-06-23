@@ -1,8 +1,11 @@
+import { Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { criarCliente } from "./actions";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export default async function ClientesPage({
   searchParams,
@@ -18,9 +21,11 @@ export default async function ClientesPage({
   }
   const { data: clientes } = await query;
 
+  const total = clientes?.length ?? 0;
+
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-semibold tracking-tight">Clientes</h1>
+      <PageHeader titulo="Clientes" subtitulo={`${total} cliente${total === 1 ? "" : "s"} cadastrado${total === 1 ? "" : "s"}`} />
 
       <Card>
         <div className="flex flex-wrap items-end gap-4">
@@ -40,6 +45,13 @@ export default async function ClientesPage({
       </Card>
 
       <Card className="overflow-hidden p-0">
+        {total === 0 ? (
+          <EmptyState
+            icon={<Users size={20} />}
+            titulo="Nenhum cliente ainda"
+            descricao="Criados automaticamente ao fazer agendamentos, ou cadastre um acima."
+          />
+        ) : (
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-neutral-200 text-left text-neutral-500">
@@ -54,15 +66,9 @@ export default async function ClientesPage({
                 <td>{cliente.telefone}</td>
               </tr>
             ))}
-            {clientes?.length === 0 ? (
-              <tr>
-                <td colSpan={2} className="px-5 py-6 text-neutral-500">
-                  Nenhum cliente ainda
-                </td>
-              </tr>
-            ) : null}
           </tbody>
         </table>
+        )}
       </Card>
     </div>
   );
