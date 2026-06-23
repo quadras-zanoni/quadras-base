@@ -1,72 +1,47 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ProdutoInputSchema } from "@/lib/validators/produto";
+import { MovimentacaoInputSchema } from "@/lib/validators/movimentacao";
 import { reaisParaCentavos } from "@/lib/money";
 
-export async function criarProduto(formData: FormData) {
-  const { quantidade_inicial, ...input } = ProdutoInputSchema.parse({
-    nome: formData.get("nome"),
-    categoria: formData.get("categoria") || undefined,
-    preco_centavos: reaisParaCentavos(formData.get("preco_reais") as string),
-    custo_centavos: reaisParaCentavos(formData.get("custo_reais") as string),
-    estoque_minimo: formData.get("estoque_minimo") || undefined,
-    quantidade_inicial: formData.get("quantidade_inicial") || undefined,
+export async function criarMovimentacao(formData: FormData) {
+  const { valor_pago_centavos, ...input } = MovimentacaoInputSchema.parse({
+    produto_id: formData.get("produto_id"),
+    tipo: formData.get("tipo"),
+    quantidade: formData.get("quantidade"),
+    motivo: formData.get("motivo") || undefined,
+    valor_pago_centavos: reaisParaCentavos(formData.get("valor_pago_reais") as string),
   });
 
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const tenantId = userData.user?.app_metadata.tenant_id as string;
 
-  const { data: produto, error } = await supabase
-    .from("produtos")
-    .insert({ ...input, tenant_id: tenantId })
-    .select("id")
-    .single();
-  if (error) throw error;
+  if (input.tipo === "entrada" && valor_pago_centavos > 0) {
+    const { data: produto, error: produtoError } = await supabase
+      .from("produtos")
+      .select("custo_centavos, quantidade_estoque")
+      .eq("id", input.produto_id)
+      .single();
+    if (produtoError) throw produtoError;
 
-  if (quantidade_inicial > 0) {
-    const { error: erroMovimentacao } = await supabase.from("movimentacoes_estoque").insert({
-      tenant_id: tenantId,
-      produto_id: produto.id,
-      tipo: "entrada",
-      quantidade: quantidade_inicial,
-      motivo: "estoque inicial",
-    });
-    if (erroMovimentacao) throw erroMovimentacao;
+    const custoUnitarioCompra = Math.round(valor_pago_centavos / input.quantidade);
+    const novoCusto = Math.round(
+      (produto.quantidade_estoque * produto.custo_centavos + input.quantidade * custoUnitarioCompra) /
+        (produto.quantidade_estoque + input.quantidade)
+    );
+
+    const { error: custoError } = await supabase
+      .from("produtos")
+      .update({ custo_centavos: novoCusto })
+      .eq("id", input.produto_id);
+    if (custoError) throw custoError;
   }
 
-  revalidatePath("/estoque");
-}
-
-export async function alternarAtivoProduto(formData: FormData) {
-  const id = String(formData.get("id"));
-  const ativoAtual = formData.get("ativo") === "true";
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("produtos").update({ ativo: !ativoAtual }).eq("id", id);
+  const { error } = await supabase.from("movimentacoes_estoque").insert({ ...input, tenant_id: tenantId });
   if (error) throw error;
 
   revalidatePath("/estoque");
-}
-
-export async function excluirProduto(formData: FormData) {
-  const id = String(formData.get("id"));
-
-  const supabase = await createClient();
-  const { error } = await supabase.from("produtos").delete().eq("id", id);
-  if (error) {
-    if (error.code === "23503") {
-      redirect(
-        `/estoque?erro=${encodeURIComponent(
-          "Não é possível excluir: esse produto já tem vendas registradas. Desative-o em vez disso."
-        )}`
-      );
-    }
-    throw error;
-  }
-
-  revalidatePath("/estoque");
+  revalidatePath("/produtos");
 }

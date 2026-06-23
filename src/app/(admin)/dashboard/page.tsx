@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { centavosParaReais } from "@/lib/money";
+import { hojeISO } from "@/lib/timezone";
 import {
   receitaTotalAgendamentos,
   duracaoHoras,
@@ -10,7 +11,7 @@ import { StatCard, Card } from "@/components/ui/Card";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = hojeISO();
 
   const [{ data: agendamentosHojeRaw }, { data: quadras }, { data: produtos }] = await Promise.all([
     supabase

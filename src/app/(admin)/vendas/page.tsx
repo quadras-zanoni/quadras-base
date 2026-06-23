@@ -1,11 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { centavosParaReais } from "@/lib/money";
+import { hojeISO, inicioDoDiaUTC } from "@/lib/timezone";
 import { NovaVendaForm } from "./nova-venda-form";
 import { Card } from "@/components/ui/Card";
 
 export default async function VendasPage() {
   const supabase = await createClient();
-  const hoje = new Date().toISOString().slice(0, 10);
+  const hoje = hojeISO();
 
   const [{ data: produtos }, { data: clientes }, { data: vendas }] = await Promise.all([
     supabase.from("produtos").select("id, nome, preco_centavos").eq("ativo", true).order("nome"),
@@ -13,7 +14,7 @@ export default async function VendasPage() {
     supabase
       .from("vendas")
       .select("id, forma_pagamento, valor_total_centavos, criado_em")
-      .gte("criado_em", `${hoje}T00:00:00`)
+      .gte("criado_em", inicioDoDiaUTC(hoje))
       .order("criado_em", { ascending: false }),
   ]);
 

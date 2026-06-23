@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { centavosParaReais } from "@/lib/money";
+import { hojeISO, inicioDoDiaUTC, limitesDoMes } from "@/lib/timezone";
 import {
   receitaTotalAgendamentos,
   contarCancelamentos,
@@ -12,9 +13,7 @@ import { StatCard, Card } from "@/components/ui/Card";
 
 export default async function RelatorioPage() {
   const supabase = await createClient();
-  const hoje = new Date();
-  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString().slice(0, 10);
-  const inicioProximoMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 1).toISOString().slice(0, 10);
+  const { inicio: inicioMes, fim: inicioProximoMes } = limitesDoMes(hojeISO());
 
   const [{ data: agendamentosRaw }, { data: vendas }] = await Promise.all([
     supabase
@@ -25,8 +24,8 @@ export default async function RelatorioPage() {
     supabase
       .from("vendas")
       .select("forma_pagamento, valor_total_centavos")
-      .gte("criado_em", `${inicioMes}T00:00:00`)
-      .lt("criado_em", `${inicioProximoMes}T00:00:00`),
+      .gte("criado_em", inicioDoDiaUTC(inicioMes))
+      .lt("criado_em", inicioDoDiaUTC(inicioProximoMes)),
   ]);
 
   const agendamentos: AgendamentoReceita[] = (agendamentosRaw ?? []).map((a) => {

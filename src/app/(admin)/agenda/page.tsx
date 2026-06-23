@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { hojeISO } from "@/lib/timezone";
 import { cancelarAgendamento } from "./actions";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -11,7 +12,7 @@ export default async function AgendaDoDiaPage({
   searchParams: Promise<{ data?: string; quadra?: string; status?: string }>;
 }) {
   const params = await searchParams;
-  const data = params.data ?? new Date().toISOString().slice(0, 10);
+  const data = params.data ?? hojeISO();
 
   const supabase = await createClient();
   let query = supabase
