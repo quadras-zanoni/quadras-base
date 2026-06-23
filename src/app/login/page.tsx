@@ -1,5 +1,3 @@
-import { login } from "./actions";
-
 export default async function LoginPage({
   searchParams,
 }: {
@@ -8,7 +6,11 @@ export default async function LoginPage({
   const { erro } = await searchParams;
   return (
     <main className="flex min-h-screen items-center justify-center bg-white">
-      <form action={login} className="w-full max-w-sm space-y-4 border border-neutral-200 p-8">
+      <form
+        action="/api/login"
+        method="POST"
+        className="w-full max-w-sm space-y-4 border border-neutral-200 p-8"
+      >
         <h1 className="text-lg font-semibold">BASE</h1>
         {erro ? <p className="text-sm text-red-600">{erro}</p> : null}
         <input
