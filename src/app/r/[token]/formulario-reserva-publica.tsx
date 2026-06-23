@@ -30,6 +30,8 @@ const DURACOES_PADRAO = [
 
 const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
+const HORARIOS_PADRAO = Array.from({ length: 14 }, (_, i) => `${String(8 + i).padStart(2, "0")}:00`);
+
 function formatarDataISO(d: Date): string {
   const ano = d.getFullYear();
   const mes = String(d.getMonth() + 1).padStart(2, "0");
@@ -147,14 +149,22 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <div className="flex-1 space-y-1">
-          <label className="text-xs font-medium text-neutral-500">Início</label>
-          <Input type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
-        </div>
-        <div className="flex-1 space-y-1">
-          <label className="text-xs font-medium text-neutral-500">Fim</label>
-          <Input type="time" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} />
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-neutral-500">Horário</label>
+        <div className="grid grid-cols-4 gap-1.5">
+          {HORARIOS_PADRAO.map((horario) => (
+            <button
+              key={horario}
+              type="button"
+              onClick={() => {
+                setHoraInicio(horario);
+                setHoraFim(somarMinutos(horario, 60));
+              }}
+              className={optionClass(horaInicio === horario)}
+            >
+              {horario}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -167,12 +177,21 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
               type="button"
               disabled={!horaInicio}
               onClick={() => setHoraFim(somarMinutos(horaInicio, duracao.minutos))}
-              className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+              className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
+                horaInicio && horaFim === somarMinutos(horaInicio, duracao.minutos)
+                  ? "border-neutral-900 bg-neutral-900 text-white"
+                  : "border-neutral-200 text-neutral-700 hover:bg-neutral-100"
+              }`}
             >
               {duracao.rotulo}
             </button>
           ))}
         </div>
+        {horaInicio && horaFim ? (
+          <p className="text-xs text-neutral-500">
+            {horaInicio} – {horaFim}
+          </p>
+        ) : null}
       </div>
 
       {quadraSelecionada && quadraSelecionada.tipos_esporte.length > 0 ? (
