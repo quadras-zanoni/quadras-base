@@ -12,6 +12,9 @@ Não existe fork de repositório. Todo cliente novo é uma linha na tabela
 3. Apontar o subdomínio `<slug>.quadrashub.app` para o projeto Vercel
    (wildcard DNS já cobre isso automaticamente; confirmar no painel
    Vercel → Domains se for o primeiro cliente).
+   - Confirmar que `NEXT_PUBLIC_APP_URL` está configurada no Vercel com a
+     URL real de produção (não `http://localhost:3000`) — senão o link
+     público de agendamento (tela Link do Cliente) sai quebrado.
 4. Personalizar marca: `update tenants set logo_url = '...', cor_primaria = '#...' where slug = 'nome-da-arena';`
 5. Cadastrar as quadras do cliente (tela Quadras) e o número de WhatsApp
    de avisos (tela Link do Cliente).
