@@ -11,6 +11,7 @@ export const AgendamentoPublicoInputSchema = z
     data: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     hora_inicio: z.string().regex(/^\d{2}:\d{2}$/),
     hora_fim: z.string().regex(/^\d{2}:\d{2}$/),
+    esporte: z.string().min(1),
     nome: z.string().min(1),
     telefone: z.string().min(8),
   })

@@ -24,7 +24,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   const { data: quadra } = await admin
     .from("quadras")
-    .select("id")
+    .select("id, tipos_esporte")
     .eq("id", input.quadra_id)
     .eq("tenant_id", tenant.id)
     .eq("ativa", true)
@@ -32,6 +32,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
 
   if (!quadra) {
     return NextResponse.json({ erro: "Quadra inválida" }, { status: 404 });
+  }
+
+  if (!quadra.tipos_esporte.includes(input.esporte)) {
+    return NextResponse.json({ erro: "Essa quadra não oferece esse esporte" }, { status: 400 });
   }
 
   const { data: existentes } = await admin
@@ -74,6 +78,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       data: input.data,
       hora_inicio: input.hora_inicio,
       hora_fim: input.hora_fim,
+      esporte: input.esporte,
       origem: "link_publico",
       status: "confirmado",
     })

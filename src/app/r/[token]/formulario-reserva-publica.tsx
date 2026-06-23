@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { gerarLinkWhatsApp } from "@/lib/whatsapp";
+import { ESPORTES_DISPONIVEIS } from "@/lib/esportes";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
@@ -14,11 +15,40 @@ interface Quadra {
 const selectClass =
   "w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400";
 
+const optionClass = (selecionado: boolean) =>
+  `rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+    selecionado
+      ? "border-neutral-900 bg-neutral-900 text-white"
+      : "border-neutral-200 text-neutral-700 hover:bg-neutral-100"
+  }`;
+
 const DURACOES_PADRAO = [
   { rotulo: "Meia horário", minutos: 30 },
   { rotulo: "1 horário", minutos: 60 },
   { rotulo: "2 horários", minutos: 120 },
 ];
+
+const DIAS_SEMANA = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+function formatarDataISO(d: Date): string {
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+function proximosDias(quantidade: number) {
+  const hoje = new Date();
+  return Array.from({ length: quantidade }, (_, i) => {
+    const d = new Date(hoje);
+    d.setDate(hoje.getDate() + i);
+    return {
+      iso: formatarDataISO(d),
+      rotuloDia: i === 0 ? "Hoje" : DIAS_SEMANA[d.getDay()],
+      rotuloData: `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`,
+    };
+  });
+}
 
 function somarMinutos(hora: string, minutos: number): string {
   const [h, m] = hora.split(":").map(Number);
@@ -27,15 +57,19 @@ function somarMinutos(hora: string, minutos: number): string {
 }
 
 export function FormularioReservaPublica({ token, quadras }: { token: string; quadras: Quadra[] }) {
+  const [dias] = useState(() => proximosDias(7));
   const [quadraId, setQuadraId] = useState(quadras[0]?.id ?? "");
-  const [data, setData] = useState("");
+  const [data, setData] = useState(dias[0]?.iso ?? "");
   const [horaInicio, setHoraInicio] = useState("");
   const [horaFim, setHoraFim] = useState("");
+  const [esporte, setEsporte] = useState("");
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [confirmado, setConfirmado] = useState(false);
+
+  const quadraSelecionada = quadras.find((quadra) => quadra.id === quadraId);
 
   async function enviar() {
     setErro(null);
@@ -48,6 +82,7 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
         data,
         hora_inicio: horaInicio,
         hora_fim: horaFim,
+        esporte,
         nome,
         telefone,
       }),
@@ -79,7 +114,14 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
 
       <div className="space-y-1">
         <label className="text-xs font-medium text-neutral-500">Quadra</label>
-        <select value={quadraId} onChange={(e) => setQuadraId(e.target.value)} className={selectClass}>
+        <select
+          value={quadraId}
+          onChange={(e) => {
+            setQuadraId(e.target.value);
+            setEsporte("");
+          }}
+          className={selectClass}
+        >
           {quadras.map((quadra) => (
             <option key={quadra.id} value={quadra.id}>
               {quadra.nome} ({quadra.tipos_esporte.join(", ")})
@@ -90,7 +132,19 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
 
       <div className="space-y-1">
         <label className="text-xs font-medium text-neutral-500">Data</label>
-        <Input type="date" value={data} onChange={(e) => setData(e.target.value)} />
+        <div className="grid grid-cols-7 gap-1.5">
+          {dias.map((dia) => (
+            <button
+              key={dia.iso}
+              type="button"
+              onClick={() => setData(dia.iso)}
+              className={`${optionClass(data === dia.iso)} flex flex-col items-center py-2.5`}
+            >
+              <span>{dia.rotuloDia}</span>
+              <span className="text-[11px] opacity-80">{dia.rotuloData}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -121,6 +175,24 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
         </div>
       </div>
 
+      {quadraSelecionada && quadraSelecionada.tipos_esporte.length > 0 ? (
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-neutral-500">Esporte</label>
+          <div className="flex flex-wrap gap-2">
+            {quadraSelecionada.tipos_esporte.map((valor) => (
+              <button
+                key={valor}
+                type="button"
+                onClick={() => setEsporte(valor)}
+                className={optionClass(esporte === valor)}
+              >
+                {ESPORTES_DISPONIVEIS.find((opcao) => opcao.valor === valor)?.rotulo ?? valor}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
       <div className="space-y-1">
         <label className="text-xs font-medium text-neutral-500">Seu nome</label>
         <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome completo" />
@@ -135,7 +207,7 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
         />
       </div>
 
-      <Button type="button" onClick={enviar} disabled={enviando} className="w-full">
+      <Button type="button" onClick={enviar} disabled={enviando || !esporte} className="w-full">
         {enviando ? "Enviando..." : "Confirmar reserva"}
       </Button>
     </div>

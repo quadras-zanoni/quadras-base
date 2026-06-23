@@ -8,6 +8,7 @@ describe("AgendamentoPublicoInputSchema", () => {
       data: "2026-06-23",
       hora_inicio: "10:00",
       hora_fim: "11:00",
+      esporte: "futevolei",
       nome: "João",
       telefone: "51999998888",
     });
@@ -20,6 +21,7 @@ describe("AgendamentoPublicoInputSchema", () => {
       data: "2026-06-23",
       hora_inicio: "10:00",
       hora_fim: "11:00",
+      esporte: "futevolei",
       nome: "João",
       telefone: "123",
     });
@@ -32,6 +34,20 @@ describe("AgendamentoPublicoInputSchema", () => {
       data: "2026-06-23",
       hora_inicio: "11:00",
       hora_fim: "10:00",
+      esporte: "futevolei",
+      nome: "João",
+      telefone: "51999998888",
+    });
+    expect(resultado.success).toBe(false);
+  });
+
+  it("rejeita esporte ausente", () => {
+    const resultado = AgendamentoPublicoInputSchema.safeParse({
+      quadra_id: "11111111-1111-1111-1111-111111111111",
+      data: "2026-06-23",
+      hora_inicio: "10:00",
+      hora_fim: "11:00",
+      esporte: "",
       nome: "João",
       telefone: "51999998888",
     });
