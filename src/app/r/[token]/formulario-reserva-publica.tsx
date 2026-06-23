@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { gerarLinkWhatsApp } from "@/lib/whatsapp";
 import { ESPORTES_DISPONIVEIS } from "@/lib/esportes";
+import { temConflito, type IntervaloHorario } from "@/lib/agenda";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 
@@ -70,8 +71,25 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
   const [erro, setErro] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [confirmado, setConfirmado] = useState(false);
+  const [ocupados, setOcupados] = useState<IntervaloHorario[]>([]);
 
   const quadraSelecionada = quadras.find((quadra) => quadra.id === quadraId);
+
+  useEffect(() => {
+    if (!quadraId || !data) return;
+    let cancelado = false;
+    fetch(`/api/public/${token}/disponibilidade?quadra_id=${quadraId}&data=${data}`)
+      .then((resposta) => resposta.json())
+      .then((corpo) => {
+        if (!cancelado) setOcupados(Array.isArray(corpo.ocupados) ? corpo.ocupados : []);
+      })
+      .catch(() => {
+        if (!cancelado) setOcupados([]);
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [token, quadraId, data]);
 
   const ehHoje = data === dias[0]?.iso;
   const minutosAgora = new Date().getHours() * 60 + new Date().getMinutes();
@@ -177,21 +195,32 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
       <div className="space-y-1">
         <label className="text-xs font-medium text-neutral-500">Horário</label>
         {horariosDisponiveis.length > 0 ? (
-          <div className="grid grid-cols-4 gap-1.5">
-            {horariosDisponiveis.map((horario) => (
-              <button
-                key={horario}
-                type="button"
-                onClick={() => {
-                  setHoraInicio(horario);
-                  setHoraFim(somarMinutos(horario, 60));
-                }}
-                className={optionClass(horaInicio === horario)}
-              >
-                {horario}
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-4 gap-1.5">
+              {horariosDisponiveis.map((horario) => {
+                const ocupado = temConflito(ocupados, { hora_inicio: horario, hora_fim: somarMinutos(horario, 60) });
+                return (
+                  <button
+                    key={horario}
+                    type="button"
+                    disabled={ocupado}
+                    onClick={() => {
+                      setHoraInicio(horario);
+                      setHoraFim(somarMinutos(horario, 60));
+                    }}
+                    className={
+                      ocupado
+                        ? "cursor-not-allowed rounded-lg border border-neutral-200 bg-neutral-100 px-3 py-2 text-xs font-medium text-neutral-400 line-through"
+                        : optionClass(horaInicio === horario)
+                    }
+                  >
+                    {horario}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="text-xs text-neutral-400">Horários riscados já estão reservados.</p>
+          </>
         ) : (
           <p className="text-xs text-neutral-500">Não há mais horários disponíveis hoje. Escolha outro dia.</p>
         )}
