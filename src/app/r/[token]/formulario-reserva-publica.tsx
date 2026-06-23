@@ -73,6 +73,15 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
 
   const quadraSelecionada = quadras.find((quadra) => quadra.id === quadraId);
 
+  const ehHoje = data === dias[0]?.iso;
+  const minutosAgora = new Date().getHours() * 60 + new Date().getMinutes();
+  const horariosDisponiveis = ehHoje
+    ? HORARIOS_PADRAO.filter((horario) => {
+        const [h, m] = horario.split(":").map(Number);
+        return h * 60 + m > minutosAgora;
+      })
+    : HORARIOS_PADRAO;
+
   async function enviar() {
     setErro(null);
     if (!data || !horaInicio || !horaFim) {
@@ -151,7 +160,11 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
             <button
               key={dia.iso}
               type="button"
-              onClick={() => setData(dia.iso)}
+              onClick={() => {
+                setData(dia.iso);
+                setHoraInicio("");
+                setHoraFim("");
+              }}
               className={`${optionClass(data === dia.iso)} flex flex-col items-center py-2.5`}
             >
               <span>{dia.rotuloDia}</span>
@@ -163,21 +176,25 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
 
       <div className="space-y-1">
         <label className="text-xs font-medium text-neutral-500">Horário</label>
-        <div className="grid grid-cols-4 gap-1.5">
-          {HORARIOS_PADRAO.map((horario) => (
-            <button
-              key={horario}
-              type="button"
-              onClick={() => {
-                setHoraInicio(horario);
-                setHoraFim(somarMinutos(horario, 60));
-              }}
-              className={optionClass(horaInicio === horario)}
-            >
-              {horario}
-            </button>
-          ))}
-        </div>
+        {horariosDisponiveis.length > 0 ? (
+          <div className="grid grid-cols-4 gap-1.5">
+            {horariosDisponiveis.map((horario) => (
+              <button
+                key={horario}
+                type="button"
+                onClick={() => {
+                  setHoraInicio(horario);
+                  setHoraFim(somarMinutos(horario, 60));
+                }}
+                className={optionClass(horaInicio === horario)}
+              >
+                {horario}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-neutral-500">Não há mais horários disponíveis hoje. Escolha outro dia.</p>
+        )}
       </div>
 
       <div className="space-y-1">
