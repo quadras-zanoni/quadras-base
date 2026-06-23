@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { type LucideIcon } from "lucide-react";
+import { type ReactNode } from "react";
 
-export function NavLink({ href, label, icon: Icon }: { href: string; label: string; icon?: LucideIcon }) {
+export function NavLink({ href, label, icon }: { href: string; label: string; icon?: ReactNode }) {
   const pathname = usePathname();
   const active = pathname === href;
 
@@ -17,7 +17,7 @@ export function NavLink({ href, label, icon: Icon }: { href: string; label: stri
           : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
       }`}
     >
-      {Icon ? <Icon size={16} strokeWidth={2} /> : null}
+      {icon}
       {label}
     </Link>
   );

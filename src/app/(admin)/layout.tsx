@@ -45,9 +45,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <aside className="flex w-60 flex-col border-r border-neutral-200 bg-white p-4">
         <p className="mb-6 px-3 text-sm font-semibold tracking-tight">{nomeExibicao}</p>
         <nav className="space-y-1">
-          {NAV.map((item) => (
-            <NavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />
-          ))}
+          {NAV.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.href}
+                href={item.href}
+                label={item.label}
+                icon={<Icon size={16} strokeWidth={2} />}
+              />
+            );
+          })}
         </nav>
       </aside>
       <main className="flex-1 p-8">{children}</main>
