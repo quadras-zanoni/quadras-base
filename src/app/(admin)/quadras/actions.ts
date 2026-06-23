@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { QuadraInputSchema } from "@/lib/validators/quadra";
 import { reaisParaCentavos } from "@/lib/money";
@@ -28,6 +29,32 @@ export async function alternarAtivaQuadra(formData: FormData) {
 
   const supabase = await createClient();
   const { error } = await supabase.from("quadras").update({ ativa: !ativaAtual }).eq("id", id);
+  if (error) throw error;
+
+  revalidatePath("/quadras");
+}
+
+export async function excluirQuadra(formData: FormData) {
+  const id = String(formData.get("id"));
+
+  const supabase = await createClient();
+
+  // agendamentos.quadra_id is ON DELETE CASCADE -- block here instead of
+  // letting a delete silently wipe out real booking history.
+  const { count } = await supabase
+    .from("agendamentos")
+    .select("id", { count: "exact", head: true })
+    .eq("quadra_id", id);
+
+  if (count && count > 0) {
+    redirect(
+      `/quadras?erro=${encodeURIComponent(
+        "Não é possível excluir: essa quadra já tem agendamentos registrados. Desative-a em vez disso."
+      )}`
+    );
+  }
+
+  const { error } = await supabase.from("quadras").delete().eq("id", id);
   if (error) throw error;
 
   revalidatePath("/quadras");

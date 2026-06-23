@@ -1,13 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { centavosParaReais } from "@/lib/money";
 import { ESPORTES_DISPONIVEIS } from "@/lib/esportes";
-import { criarQuadra, alternarAtivaQuadra } from "./actions";
+import { criarQuadra, alternarAtivaQuadra, excluirQuadra } from "./actions";
+import { ExcluirQuadraBotao } from "./excluir-quadra-botao";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
-export default async function QuadrasPage() {
+export default async function QuadrasPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string }>;
+}) {
+  const { erro } = await searchParams;
   const supabase = await createClient();
   const { data: quadras } = await supabase
     .from("quadras")
@@ -17,6 +23,7 @@ export default async function QuadrasPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-semibold tracking-tight">Quadras</h1>
+      {erro ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p> : null}
 
       <Card>
         <form action={criarQuadra} className="space-y-3">
@@ -66,13 +73,17 @@ export default async function QuadrasPage() {
                     {quadra.ativa ? "Ativa" : "Inativa"}
                   </Badge>
                 </td>
-                <td className="px-5">
-                  <form action={alternarAtivaQuadra}>
+                <td className="space-x-3 px-5">
+                  <form action={alternarAtivaQuadra} className="inline">
                     <input type="hidden" name="id" value={quadra.id} />
                     <input type="hidden" name="ativa" value={String(quadra.ativa)} />
                     <button type="submit" className="text-sm text-neutral-500 underline hover:text-neutral-900">
                       {quadra.ativa ? "Desativar" : "Ativar"}
                     </button>
+                  </form>
+                  <form action={excluirQuadra} className="inline">
+                    <input type="hidden" name="id" value={quadra.id} />
+                    <ExcluirQuadraBotao />
                   </form>
                 </td>
               </tr>
