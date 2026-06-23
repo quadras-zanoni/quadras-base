@@ -75,6 +75,18 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
 
   async function enviar() {
     setErro(null);
+    if (!data || !horaInicio || !horaFim) {
+      setErro("Escolha a data e o horário antes de confirmar.");
+      return;
+    }
+    if (!esporte) {
+      setErro("Selecione o esporte antes de confirmar.");
+      return;
+    }
+    if (!nome || !telefone) {
+      setErro("Preencha seu nome e WhatsApp antes de confirmar.");
+      return;
+    }
     setEnviando(true);
     const resposta = await fetch(`/api/public/${token}/agendar`, {
       method: "POST",
@@ -226,7 +238,7 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
         />
       </div>
 
-      <Button type="button" onClick={enviar} disabled={enviando || !esporte} className="w-full">
+      <Button type="button" onClick={enviar} disabled={enviando} className="w-full">
         {enviando ? "Enviando..." : "Confirmar reserva"}
       </Button>
     </div>
