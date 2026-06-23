@@ -10,7 +10,7 @@ export default async function EstoquePage() {
   const supabase = await createClient();
   const { data: produtos } = await supabase
     .from("produtos")
-    .select("id, nome, categoria, preco_centavos, quantidade_estoque, estoque_minimo, ativo")
+    .select("id, nome, categoria, custo_centavos, preco_centavos, quantidade_estoque, estoque_minimo, ativo")
     .order("nome");
 
   return (
@@ -20,16 +20,19 @@ export default async function EstoquePage() {
       <Card>
         <form action={criarProduto} className="flex flex-wrap items-end gap-2">
           <Input name="nome" placeholder="Nome" required className="w-40" />
-          <Input name="categoria" placeholder="Categoria" className="w-36" />
+          <Input name="categoria" placeholder="Categoria" className="w-32" />
+          <Input name="custo_reais" type="number" min="0" step="0.01" placeholder="Custo (R$)" className="w-32" />
           <Input
-            name="preco_centavos"
+            name="preco_reais"
             type="number"
             min="0"
-            placeholder="Preço (centavos)"
+            step="0.01"
+            placeholder="Valor de venda (R$)"
             required
             className="w-40"
           />
-          <Input name="estoque_minimo" type="number" min="0" placeholder="Estoque mínimo" className="w-36" />
+          <Input name="quantidade_inicial" type="number" min="0" placeholder="Estoque atual" className="w-32" />
+          <Input name="estoque_minimo" type="number" min="0" placeholder="Estoque mínimo" className="w-32" />
           <Button type="submit">Novo produto</Button>
         </form>
       </Card>
@@ -40,7 +43,8 @@ export default async function EstoquePage() {
             <tr className="border-b border-neutral-200 text-left text-neutral-500">
               <th className="px-5 py-3 font-medium">Nome</th>
               <th className="font-medium">Categoria</th>
-              <th className="font-medium">Preço</th>
+              <th className="font-medium">Custo</th>
+              <th className="font-medium">Venda</th>
               <th className="font-medium">Estoque</th>
               <th className="font-medium">Status</th>
               <th />
@@ -51,6 +55,7 @@ export default async function EstoquePage() {
               <tr key={produto.id} className="border-b border-neutral-100 last:border-0">
                 <td className="px-5 py-3">{produto.nome}</td>
                 <td>{produto.categoria}</td>
+                <td>{centavosParaReais(produto.custo_centavos)}</td>
                 <td>{centavosParaReais(produto.preco_centavos)}</td>
                 <td>
                   <span className="mr-2">{produto.quantidade_estoque}</span>

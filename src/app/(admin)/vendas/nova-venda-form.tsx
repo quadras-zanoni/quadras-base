@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { reaisParaCentavos } from "@/lib/money";
 
 interface Produto {
   id: string;
@@ -20,6 +21,7 @@ interface ItemCarrinho {
   produto_id: string;
   quantidade: number;
   preco_unitario_centavos: number;
+  desconto_reais: string;
 }
 
 const selectClass =
@@ -37,7 +39,12 @@ export function NovaVendaForm({ produtos, clientes }: { produtos: Produto[]; cli
     if (!primeiroProduto) return;
     setItens([
       ...itens,
-      { produto_id: primeiroProduto.id, quantidade: 1, preco_unitario_centavos: primeiroProduto.preco_centavos },
+      {
+        produto_id: primeiroProduto.id,
+        quantidade: 1,
+        preco_unitario_centavos: primeiroProduto.preco_centavos,
+        desconto_reais: "",
+      },
     ]);
   }
 
@@ -51,10 +58,19 @@ export function NovaVendaForm({ produtos, clientes }: { produtos: Produto[]; cli
 
   async function registrarVenda() {
     setErro(null);
+    const itensComDesconto = itens.map(({ produto_id, quantidade, preco_unitario_centavos, desconto_reais }) => ({
+      produto_id,
+      quantidade,
+      preco_unitario_centavos: Math.max(0, preco_unitario_centavos - reaisParaCentavos(desconto_reais)),
+    }));
     const resposta = await fetch("/api/vendas", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cliente_id: clienteId || undefined, forma_pagamento: formaPagamento, itens }),
+      body: JSON.stringify({
+        cliente_id: clienteId || undefined,
+        forma_pagamento: formaPagamento,
+        itens: itensComDesconto,
+      }),
     });
     if (!resposta.ok) {
       const corpo = await resposta.json();
@@ -113,6 +129,15 @@ export function NovaVendaForm({ produtos, clientes }: { produtos: Produto[]; cli
             value={item.quantidade}
             onChange={(e) => atualizarItem(indice, "quantidade", Number(e.target.value))}
             className="w-20 rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400"
+          />
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Desconto (R$)"
+            value={item.desconto_reais}
+            onChange={(e) => atualizarItem(indice, "desconto_reais", e.target.value)}
+            className="w-32 rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none placeholder:text-neutral-400 focus:border-neutral-400"
           />
           <button
             type="button"

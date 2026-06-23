@@ -3,21 +3,39 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { ProdutoInputSchema } from "@/lib/validators/produto";
+import { reaisParaCentavos } from "@/lib/money";
 
 export async function criarProduto(formData: FormData) {
-  const input = ProdutoInputSchema.parse({
+  const { quantidade_inicial, ...input } = ProdutoInputSchema.parse({
     nome: formData.get("nome"),
     categoria: formData.get("categoria") || undefined,
-    preco_centavos: formData.get("preco_centavos"),
+    preco_centavos: reaisParaCentavos(formData.get("preco_reais") as string),
+    custo_centavos: reaisParaCentavos(formData.get("custo_reais") as string),
     estoque_minimo: formData.get("estoque_minimo") || undefined,
+    quantidade_inicial: formData.get("quantidade_inicial") || undefined,
   });
 
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const tenantId = userData.user?.app_metadata.tenant_id as string;
 
-  const { error } = await supabase.from("produtos").insert({ ...input, tenant_id: tenantId });
+  const { data: produto, error } = await supabase
+    .from("produtos")
+    .insert({ ...input, tenant_id: tenantId })
+    .select("id")
+    .single();
   if (error) throw error;
+
+  if (quantidade_inicial > 0) {
+    const { error: erroMovimentacao } = await supabase.from("movimentacoes_estoque").insert({
+      tenant_id: tenantId,
+      produto_id: produto.id,
+      tipo: "entrada",
+      quantidade: quantidade_inicial,
+      motivo: "estoque inicial",
+    });
+    if (erroMovimentacao) throw erroMovimentacao;
+  }
 
   revalidatePath("/estoque");
 }
