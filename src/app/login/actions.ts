@@ -8,10 +8,18 @@ export async function login(formData: FormData) {
   const senha = String(formData.get("senha") ?? "");
 
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
 
-  if (error) {
-    redirect(`/login?erro=${encodeURIComponent(error.message)}`);
+  let authError: string | null = null;
+  try {
+    const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+    authError = error?.message ?? null;
+  } catch (e) {
+    console.error("login signInWithPassword threw:", e);
+    authError = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+  }
+
+  if (authError) {
+    redirect(`/login?erro=${encodeURIComponent(authError)}`);
   }
   redirect("/dashboard");
 }
