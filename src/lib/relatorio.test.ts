@@ -6,6 +6,7 @@ import {
   receitaPorQuadra,
   agruparVendasPorFormaPagamento,
   receitaTotalVendas,
+  taxaOcupacao,
 } from "./relatorio";
 
 const agendamentoBase = {
@@ -65,5 +66,16 @@ describe("agruparVendasPorFormaPagamento", () => {
 describe("receitaTotalVendas", () => {
   it("soma o valor total de todas as vendas", () => {
     expect(receitaTotalVendas([{ valor_total_centavos: 100 }, { valor_total_centavos: 200 }])).toBe(300);
+  });
+});
+
+describe("taxaOcupacao", () => {
+  it("calcula a fração de horas reservadas sobre a janela padrão de operação", () => {
+    // janela padrão: 12h por quadra ativa
+    expect(taxaOcupacao(6, 1)).toBe(0.5);
+  });
+
+  it("retorna 0 quando não há quadras ativas", () => {
+    expect(taxaOcupacao(6, 0)).toBe(0);
   });
 });

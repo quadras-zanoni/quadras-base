@@ -51,3 +51,12 @@ export function agruparVendasPorFormaPagamento(
 export function receitaTotalVendas(vendas: { valor_total_centavos: number }[]): number {
   return vendas.reduce((total, v) => total + v.valor_total_centavos, 0);
 }
+
+// Janela de operação padrão considerada para a taxa de ocupação (10h–22h).
+// Não há configuração de horário de funcionamento por arena nesta v1.
+export const HORAS_OPERACAO_PADRAO = 12;
+
+export function taxaOcupacao(horasReservadasHoje: number, quadrasAtivas: number): number {
+  if (quadrasAtivas === 0) return 0;
+  return horasReservadasHoje / (quadrasAtivas * HORAS_OPERACAO_PADRAO);
+}
