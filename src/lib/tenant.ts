@@ -12,9 +12,9 @@ export interface Tenant {
 }
 
 export function resolverTenantSlug(host: string, devSlug = "base"): string {
-  const isLocal = host.includes("localhost") || host.includes("127.0.0.1");
-  if (isLocal) return devSlug;
-  return host.split(".")[0];
+  const hostname = host.split(":")[0];
+  if (hostname.endsWith(".quadrashub.app")) return hostname.split(".")[0];
+  return devSlug;
 }
 
 export async function buscarTenantPorSlug(slug: string): Promise<Tenant | null> {

@@ -13,4 +13,8 @@ describe("resolverTenantSlug", () => {
   it("cai para o tenant de desenvolvimento em 127.0.0.1", () => {
     expect(resolverTenantSlug("127.0.0.1:3000", "base")).toBe("base");
   });
+
+  it("cai para o tenant de desenvolvimento em domínio padrão da Vercel (sem domínio próprio configurado)", () => {
+    expect(resolverTenantSlug("quadras-base.vercel.app", "base")).toBe("base");
+  });
 });
