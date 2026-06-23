@@ -22,12 +22,13 @@ export default async function QuadrasPage() {
           <Input name="nome" placeholder="Nome" required className="w-40" />
           <Input name="tipo_esporte" placeholder="Tipo de esporte" required className="w-40" />
           <Input
-            name="preco_hora_centavos"
+            name="preco_hora_reais"
             type="number"
             min="0"
-            placeholder="Preço/hora (centavos)"
+            step="0.01"
+            placeholder="Preço/hora (R$)"
             required
-            className="w-48"
+            className="w-40"
           />
           <Button type="submit">Nova quadra</Button>
         </form>
