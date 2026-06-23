@@ -7,6 +7,7 @@ export interface Tenant {
   logo_url: string | null;
   cor_primaria: string;
   whatsapp_avisos: string | null;
+  whatsapp_avisos_nome: string | null;
   token_link_publico: string;
   status_assinatura: "ativo" | "bloqueado";
 }
@@ -28,7 +29,7 @@ export async function buscarTenantPorSlug(slug: string): Promise<Tenant | null> 
   const { data, error } = await supabase
     .from("tenants")
     .select(
-      "id, slug, nome_exibicao, logo_url, cor_primaria, whatsapp_avisos, token_link_publico, status_assinatura"
+      "id, slug, nome_exibicao, logo_url, cor_primaria, whatsapp_avisos, whatsapp_avisos_nome, token_link_publico, status_assinatura"
     )
     .eq("slug", slug)
     .single();
@@ -42,7 +43,7 @@ export async function buscarTenantPorToken(token: string): Promise<Tenant | null
   const { data, error } = await supabase
     .from("tenants")
     .select(
-      "id, slug, nome_exibicao, logo_url, cor_primaria, whatsapp_avisos, token_link_publico, status_assinatura"
+      "id, slug, nome_exibicao, logo_url, cor_primaria, whatsapp_avisos, whatsapp_avisos_nome, token_link_publico, status_assinatura"
     )
     .eq("token_link_publico", token)
     .single();
