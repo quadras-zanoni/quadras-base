@@ -67,6 +67,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
       .single();
     if (clienteError) return NextResponse.json({ erro: clienteError.message }, { status: 500 });
     clienteId = novoCliente.id;
+  } else {
+    // O nome digitado agora é mais confiável que o que já estava salvo
+    // (ex.: o número já existia com um nome de teste/antigo).
+    const { error: nomeError } = await admin.from("clientes").update({ nome: input.nome }).eq("id", clienteId);
+    if (nomeError) return NextResponse.json({ erro: nomeError.message }, { status: 500 });
   }
 
   const { data: agendamento, error } = await admin
