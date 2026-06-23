@@ -12,6 +12,16 @@ describe("MovimentacaoInputSchema", () => {
     expect(resultado.success).toBe(true);
   });
 
+  it("usa valor_pago_centavos padrão (zero) quando ausente", () => {
+    const resultado = MovimentacaoInputSchema.parse({
+      produto_id: "11111111-1111-1111-1111-111111111111",
+      tipo: "entrada",
+      quantidade: 10,
+      motivo: "reposição",
+    });
+    expect(resultado.valor_pago_centavos).toBe(0);
+  });
+
   it("rejeita quantidade zero ou negativa", () => {
     const resultado = MovimentacaoInputSchema.safeParse({
       produto_id: "11111111-1111-1111-1111-111111111111",

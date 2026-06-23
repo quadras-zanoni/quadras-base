@@ -42,9 +42,20 @@ export default async function MovimentacoesPage() {
             <option value="saida">Saída</option>
           </select>
           <Input name="quantidade" type="number" min="1" placeholder="Quantidade" required className="w-32" />
+          <Input
+            name="valor_pago_reais"
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="Valor pago (R$)"
+            className="w-36"
+          />
           <Input name="motivo" placeholder="Motivo" className="w-40" />
           <Button type="submit">Registrar</Button>
         </form>
+        <p className="mt-2 text-xs text-neutral-500">
+          Em uma entrada, preencher o valor pago total recalcula o custo médio do produto automaticamente.
+        </p>
       </Card>
 
       <Card className="overflow-hidden p-0">

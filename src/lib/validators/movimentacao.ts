@@ -9,6 +9,7 @@ export const MovimentacaoInputSchema = z.object({
   tipo: z.enum(["entrada", "saida"]),
   quantidade: z.coerce.number().int().positive(),
   motivo: z.string().min(1).default("manual"),
+  valor_pago_centavos: z.coerce.number().int().nonnegative().default(0),
 });
 
 export type MovimentacaoInput = z.infer<typeof MovimentacaoInputSchema>;

@@ -1,12 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 import { centavosParaReais } from "@/lib/money";
-import { criarProduto, alternarAtivoProduto } from "./actions";
+import { criarProduto, alternarAtivoProduto, excluirProduto } from "./actions";
+import { ExcluirProdutoBotao } from "./excluir-produto-botao";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
-export default async function EstoquePage() {
+export default async function EstoquePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string }>;
+}) {
+  const { erro } = await searchParams;
   const supabase = await createClient();
   const { data: produtos } = await supabase
     .from("produtos")
@@ -16,6 +22,7 @@ export default async function EstoquePage() {
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-semibold tracking-tight">Estoque</h1>
+      {erro ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p> : null}
 
       <Card>
         <form action={criarProduto} className="flex flex-wrap items-end gap-2">
@@ -68,13 +75,17 @@ export default async function EstoquePage() {
                     {produto.ativo ? "Ativo" : "Inativo"}
                   </Badge>
                 </td>
-                <td className="px-5">
-                  <form action={alternarAtivoProduto}>
+                <td className="space-x-3 px-5">
+                  <form action={alternarAtivoProduto} className="inline">
                     <input type="hidden" name="id" value={produto.id} />
                     <input type="hidden" name="ativo" value={String(produto.ativo)} />
                     <button type="submit" className="text-sm text-neutral-500 underline hover:text-neutral-900">
                       {produto.ativo ? "Desativar" : "Ativar"}
                     </button>
+                  </form>
+                  <form action={excluirProduto} className="inline">
+                    <input type="hidden" name="id" value={produto.id} />
+                    <ExcluirProdutoBotao />
                   </form>
                 </td>
               </tr>

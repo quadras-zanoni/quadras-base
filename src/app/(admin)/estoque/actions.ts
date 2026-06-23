@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ProdutoInputSchema } from "@/lib/validators/produto";
 import { reaisParaCentavos } from "@/lib/money";
@@ -47,6 +48,25 @@ export async function alternarAtivoProduto(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.from("produtos").update({ ativo: !ativoAtual }).eq("id", id);
   if (error) throw error;
+
+  revalidatePath("/estoque");
+}
+
+export async function excluirProduto(formData: FormData) {
+  const id = String(formData.get("id"));
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("produtos").delete().eq("id", id);
+  if (error) {
+    if (error.code === "23503") {
+      redirect(
+        `/estoque?erro=${encodeURIComponent(
+          "Não é possível excluir: esse produto já tem vendas registradas. Desative-o em vez disso."
+        )}`
+      );
+    }
+    throw error;
+  }
 
   revalidatePath("/estoque");
 }
