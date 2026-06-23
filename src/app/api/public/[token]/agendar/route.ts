@@ -9,12 +9,30 @@ export async function POST(request: Request, { params }: { params: Promise<{ tok
   const tenant = await buscarTenantPorToken(token);
   if (!tenant) return NextResponse.json({ erro: "Link inválido" }, { status: 404 });
 
-  const parsed = AgendamentoPublicoInputSchema.safeParse(await request.json());
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ erro: "Corpo da requisição inválido" }, { status: 400 });
+  }
+  const parsed = AgendamentoPublicoInputSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ erro: parsed.error.flatten() }, { status: 400 });
   }
   const input = parsed.data;
   const admin = createAdminClient();
+
+  const { data: quadra } = await admin
+    .from("quadras")
+    .select("id")
+    .eq("id", input.quadra_id)
+    .eq("tenant_id", tenant.id)
+    .eq("ativa", true)
+    .maybeSingle();
+
+  if (!quadra) {
+    return NextResponse.json({ erro: "Quadra inválida" }, { status: 404 });
+  }
 
   const { data: existentes } = await admin
     .from("agendamentos")
