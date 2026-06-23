@@ -1,7 +1,5 @@
+import { redirect } from "next/navigation";
+
 export default function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center">
-      <p className="text-sm text-neutral-500">BASE</p>
-    </main>
-  );
+  redirect("/login");
 }
