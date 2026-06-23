@@ -2,6 +2,9 @@ import { headers } from "next/headers";
 import { buscarTenantPorSlug } from "@/lib/tenant";
 import { atualizarWhatsappAvisos } from "./actions";
 import { CopiarLinkBotao } from "./copiar-link-botao";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 
 export default async function LinkClientePage() {
   const headerList = await headers();
@@ -14,26 +17,21 @@ export default async function LinkClientePage() {
 
   return (
     <div className="max-w-xl space-y-6">
-      <h1 className="text-lg font-semibold">Link do Cliente</h1>
+      <h1 className="text-xl font-semibold tracking-tight">Link do Cliente</h1>
 
-      <div className="space-y-2 border border-neutral-200 p-4">
+      <Card className="space-y-3">
         <p className="text-sm text-neutral-500">Seu link de reservas</p>
         <p className="break-all text-sm">{link}</p>
         <CopiarLinkBotao link={link} />
-      </div>
+      </Card>
 
-      <form action={atualizarWhatsappAvisos} className="space-y-2 border border-neutral-200 p-4">
-        <label className="text-sm text-neutral-500">Número de WhatsApp para avisos</label>
-        <input
-          name="whatsapp_avisos"
-          defaultValue={tenant.whatsapp_avisos ?? ""}
-          placeholder="Ex: 51999998888"
-          className="w-full border border-neutral-300 px-2 py-1.5 text-sm"
-        />
-        <button type="submit" className="bg-black px-3 py-1.5 text-sm text-white">
-          Salvar
-        </button>
-      </form>
+      <Card>
+        <form action={atualizarWhatsappAvisos} className="space-y-3">
+          <label className="text-sm text-neutral-500">Número de WhatsApp para avisos</label>
+          <Input name="whatsapp_avisos" defaultValue={tenant.whatsapp_avisos ?? ""} placeholder="Ex: 51999998888" />
+          <Button type="submit">Salvar</Button>
+        </form>
+      </Card>
     </div>
   );
 }

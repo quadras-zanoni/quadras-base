@@ -22,8 +22,15 @@ export async function proxy(request: NextRequest) {
   // Headers must be attached via the `request` option below, not via
   // response.headers.set() after the fact — the latter only reaches the
   // browser, not headers() in downstream Server Components (Task 4/5 fix).
+  // Tenant display fields are forwarded here so downstream layouts don't
+  // need a second cross-region lookup for data already fetched above.
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-tenant-slug", tenantSlug);
+  requestHeaders.set("x-tenant-found", tenant ? "1" : "0");
+  if (tenant) {
+    requestHeaders.set("x-tenant-id", tenant.id);
+    requestHeaders.set("x-tenant-nome-exibicao", encodeURIComponent(tenant.nome_exibicao));
+  }
   const response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(

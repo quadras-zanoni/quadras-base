@@ -1,3 +1,6 @@
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -5,34 +8,21 @@ export default async function LoginPage({
 }) {
   const { erro } = await searchParams;
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white">
+    <main className="flex min-h-screen items-center justify-center bg-neutral-50">
       <form
         action="/api/login"
         method="POST"
-        className="w-full max-w-sm space-y-4 border border-neutral-200 p-8"
+        className="w-full max-w-sm space-y-4 rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm"
       >
-        <h1 className="text-lg font-semibold">BASE</h1>
-        {erro ? <p className="text-sm text-red-600">{erro}</p> : null}
-        <input
-          name="email"
-          type="email"
-          required
-          placeholder="E-mail"
-          className="w-full border border-neutral-300 px-3 py-2 text-sm"
-        />
-        <input
-          name="senha"
-          type="password"
-          required
-          placeholder="Senha"
-          className="w-full border border-neutral-300 px-3 py-2 text-sm"
-        />
-        <button
-          type="submit"
-          className="w-full bg-black px-3 py-2 text-sm font-medium text-white"
-        >
+        <h1 className="text-lg font-semibold tracking-tight">BASE</h1>
+        {erro ? (
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>
+        ) : null}
+        <Input name="email" type="email" required placeholder="E-mail" />
+        <Input name="senha" type="password" required placeholder="Senha" />
+        <Button type="submit" className="w-full">
           Entrar
-        </button>
+        </Button>
       </form>
     </main>
   );

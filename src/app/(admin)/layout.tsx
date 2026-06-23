@@ -1,8 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { buscarTenantPorSlug } from "@/lib/tenant";
+import { NavLink } from "@/components/ui/NavLink";
 
 const NAV = [
   { href: "/dashboard", label: "Dashboard" },
@@ -22,28 +21,24 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const { data } = await supabase.auth.getUser();
   if (!data.user) redirect("/login");
 
+  // The proxy already resolved the tenant for the subscription gate above
+  // this layout in the request pipeline -- reuse that result via headers
+  // instead of paying for a second cross-region lookup here.
   const headerList = await headers();
-  const slug = headerList.get("x-tenant-slug") ?? "base";
-  const tenant = await buscarTenantPorSlug(slug);
-  if (!tenant) redirect("/login");
+  if (headerList.get("x-tenant-found") !== "1") redirect("/login");
+  const nomeExibicao = decodeURIComponent(headerList.get("x-tenant-nome-exibicao") ?? "");
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="w-56 border-r border-neutral-200 p-4">
-        <p className="mb-6 text-sm font-semibold">{tenant.nome_exibicao}</p>
+    <div className="flex min-h-screen bg-neutral-50">
+      <aside className="flex w-60 flex-col border-r border-neutral-200 bg-white p-4">
+        <p className="mb-6 px-3 text-sm font-semibold tracking-tight">{nomeExibicao}</p>
         <nav className="space-y-1">
           {NAV.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="block px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-100"
-            >
-              {item.label}
-            </Link>
+            <NavLink key={item.href} href={item.href} label={item.label} />
           ))}
         </nav>
       </aside>
-      <main className="flex-1 p-6">{children}</main>
+      <main className="flex-1 p-8">{children}</main>
     </div>
   );
 }

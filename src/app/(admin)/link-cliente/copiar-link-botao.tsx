@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/Button";
 
 export function CopiarLinkBotao({ link }: { link: string }) {
   const [copiado, setCopiado] = useState(false);
@@ -12,8 +13,8 @@ export function CopiarLinkBotao({ link }: { link: string }) {
   }
 
   return (
-    <button type="button" onClick={copiar} className="border border-neutral-300 px-3 py-1.5 text-sm">
+    <Button type="button" variant="secondary" onClick={copiar}>
       {copiado ? "Copiado!" : "Copiar link"}
-    </button>
+    </Button>
   );
 }

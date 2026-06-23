@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 
 interface Produto {
   id: string;
@@ -19,6 +21,9 @@ interface ItemCarrinho {
   quantidade: number;
   preco_unitario_centavos: number;
 }
+
+const selectClass =
+  "rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400";
 
 export function NovaVendaForm({ produtos, clientes }: { produtos: Produto[]; clientes: Cliente[] }) {
   const router = useRouter();
@@ -61,15 +66,11 @@ export function NovaVendaForm({ produtos, clientes }: { produtos: Produto[]; cli
   }
 
   return (
-    <div className="space-y-3 border border-neutral-200 p-4">
-      {erro ? <p className="text-sm text-red-600">{erro}</p> : null}
+    <Card className="space-y-4">
+      {erro ? <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p> : null}
 
       <div className="flex gap-2">
-        <select
-          value={clienteId}
-          onChange={(e) => setClienteId(e.target.value)}
-          className="border border-neutral-300 px-2 py-1 text-sm"
-        >
+        <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} className={selectClass}>
           <option value="">Sem cliente</option>
           {clientes.map((cliente) => (
             <option key={cliente.id} value={cliente.id}>
@@ -80,7 +81,7 @@ export function NovaVendaForm({ produtos, clientes }: { produtos: Produto[]; cli
         <select
           value={formaPagamento}
           onChange={(e) => setFormaPagamento(e.target.value)}
-          className="border border-neutral-300 px-2 py-1 text-sm"
+          className={selectClass}
         >
           <option value="dinheiro">Dinheiro</option>
           <option value="pix">Pix</option>
@@ -90,7 +91,7 @@ export function NovaVendaForm({ produtos, clientes }: { produtos: Produto[]; cli
       </div>
 
       {itens.map((item, indice) => (
-        <div key={indice} className="flex gap-2">
+        <div key={indice} className="flex items-center gap-2">
           <select
             value={item.produto_id}
             onChange={(e) => {
@@ -98,7 +99,7 @@ export function NovaVendaForm({ produtos, clientes }: { produtos: Produto[]; cli
               atualizarItem(indice, "produto_id", e.target.value);
               if (produto) atualizarItem(indice, "preco_unitario_centavos", produto.preco_centavos);
             }}
-            className="border border-neutral-300 px-2 py-1 text-sm"
+            className={selectClass}
           >
             {produtos.map((produto) => (
               <option key={produto.id} value={produto.id}>
@@ -111,27 +112,26 @@ export function NovaVendaForm({ produtos, clientes }: { produtos: Produto[]; cli
             min="1"
             value={item.quantidade}
             onChange={(e) => atualizarItem(indice, "quantidade", Number(e.target.value))}
-            className="w-20 border border-neutral-300 px-2 py-1 text-sm"
+            className="w-20 rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400"
           />
-          <button type="button" onClick={() => removerItem(indice)} className="text-neutral-600 underline">
+          <button
+            type="button"
+            onClick={() => removerItem(indice)}
+            className="text-sm text-neutral-500 underline hover:text-neutral-900"
+          >
             remover
           </button>
         </div>
       ))}
 
       <div className="flex gap-2">
-        <button type="button" onClick={adicionarItem} className="border border-neutral-300 px-3 py-1.5 text-sm">
+        <Button type="button" variant="secondary" onClick={adicionarItem}>
           Adicionar item
-        </button>
-        <button
-          type="button"
-          onClick={registrarVenda}
-          disabled={itens.length === 0}
-          className="bg-black px-3 py-1.5 text-sm text-white disabled:opacity-50"
-        >
+        </Button>
+        <Button type="button" onClick={registrarVenda} disabled={itens.length === 0}>
           Registrar venda
-        </button>
+        </Button>
       </div>
-    </div>
+    </Card>
   );
 }

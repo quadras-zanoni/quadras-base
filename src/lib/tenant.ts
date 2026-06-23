@@ -17,7 +17,13 @@ export function resolverTenantSlug(host: string, devSlug = "base"): string {
   return devSlug;
 }
 
+const TENANT_CACHE_TTL_MS = 30_000;
+const tenantPorSlugCache = new Map<string, { tenant: Tenant | null; expiraEm: number }>();
+
 export async function buscarTenantPorSlug(slug: string): Promise<Tenant | null> {
+  const cacheado = tenantPorSlugCache.get(slug);
+  if (cacheado && cacheado.expiraEm > Date.now()) return cacheado.tenant;
+
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("tenants")
@@ -26,8 +32,9 @@ export async function buscarTenantPorSlug(slug: string): Promise<Tenant | null> 
     )
     .eq("slug", slug)
     .single();
-  if (error || !data) return null;
-  return data;
+  const tenant = error || !data ? null : data;
+  tenantPorSlugCache.set(slug, { tenant, expiraEm: Date.now() + TENANT_CACHE_TTL_MS });
+  return tenant;
 }
 
 export async function buscarTenantPorToken(token: string): Promise<Tenant | null> {

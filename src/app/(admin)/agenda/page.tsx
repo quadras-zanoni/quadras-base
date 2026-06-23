@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { cancelarAgendamento } from "./actions";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 export default async function AgendaDoDiaPage({
   searchParams,
@@ -19,74 +23,87 @@ export default async function AgendaDoDiaPage({
   if (params.quadra) query = query.eq("quadra_id", params.quadra);
   if (params.status) query = query.eq("status", params.status);
 
-  const { data: agendamentos } = await query;
-  const { data: quadras } = await supabase.from("quadras").select("id, nome").order("nome");
+  const [{ data: agendamentos }, { data: quadras }] = await Promise.all([
+    query,
+    supabase.from("quadras").select("id, nome").order("nome"),
+  ]);
+
+  const selectClass =
+    "rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400";
 
   return (
     <div className="space-y-6">
-      <h1 className="text-lg font-semibold">Agenda do Dia</h1>
+      <h1 className="text-xl font-semibold tracking-tight">Agenda do Dia</h1>
 
-      <form method="get" className="flex flex-wrap gap-2">
-        <input name="data" type="date" defaultValue={data} className="border border-neutral-300 px-2 py-1 text-sm" />
-        <select name="quadra" defaultValue={params.quadra ?? ""} className="border border-neutral-300 px-2 py-1 text-sm">
-          <option value="">Todas as quadras</option>
-          {(quadras ?? []).map((quadra) => (
-            <option key={quadra.id} value={quadra.id}>
-              {quadra.nome}
-            </option>
-          ))}
-        </select>
-        <select name="status" defaultValue={params.status ?? ""} className="border border-neutral-300 px-2 py-1 text-sm">
-          <option value="">Todos os status</option>
-          <option value="confirmado">Confirmado</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-        <button type="submit" className="border border-neutral-300 px-3 py-1 text-sm">
-          Filtrar
-        </button>
-      </form>
+      <Card>
+        <form method="get" className="flex flex-wrap items-end gap-2">
+          <Input name="data" type="date" defaultValue={data} className="w-44" />
+          <select name="quadra" defaultValue={params.quadra ?? ""} className={selectClass}>
+            <option value="">Todas as quadras</option>
+            {(quadras ?? []).map((quadra) => (
+              <option key={quadra.id} value={quadra.id}>
+                {quadra.nome}
+              </option>
+            ))}
+          </select>
+          <select name="status" defaultValue={params.status ?? ""} className={selectClass}>
+            <option value="">Todos os status</option>
+            <option value="confirmado">Confirmado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+          <Button type="submit" variant="secondary">
+            Filtrar
+          </Button>
+        </form>
+      </Card>
 
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-neutral-200 text-left text-neutral-500">
-            <th className="py-2">Horário</th>
-            <th>Quadra</th>
-            <th>Cliente</th>
-            <th>Status</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {(agendamentos ?? []).map((agendamento) => (
-            <tr key={agendamento.id} className="border-b border-neutral-100">
-              <td className="py-2">
-                {agendamento.hora_inicio}–{agendamento.hora_fim}
-                {agendamento.recorrente ? " 🔁" : ""}
-              </td>
-              <td>{(agendamento.quadras as unknown as { nome: string })?.nome}</td>
-              <td>{(agendamento.clientes as unknown as { nome: string })?.nome}</td>
-              <td>{agendamento.status}</td>
-              <td>
-                {agendamento.status === "confirmado" ? (
-                  <form action={cancelarAgendamento}>
-                    <input type="hidden" name="id" value={agendamento.id} />
-                    <button type="submit" className="text-neutral-600 underline">
-                      Cancelar
-                    </button>
-                  </form>
-                ) : null}
-              </td>
+      <Card className="overflow-hidden p-0">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-neutral-200 text-left text-neutral-500">
+              <th className="px-5 py-3 font-medium">Horário</th>
+              <th className="font-medium">Quadra</th>
+              <th className="font-medium">Cliente</th>
+              <th className="font-medium">Status</th>
+              <th />
             </tr>
-          ))}
-          {agendamentos?.length === 0 ? (
-            <tr>
-              <td colSpan={5} className="py-4 text-neutral-500">
-                Nenhum agendamento para este dia
-              </td>
-            </tr>
-          ) : null}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {(agendamentos ?? []).map((agendamento) => (
+              <tr key={agendamento.id} className="border-b border-neutral-100 last:border-0">
+                <td className="px-5 py-3">
+                  {agendamento.hora_inicio}–{agendamento.hora_fim}
+                  {agendamento.recorrente ? " 🔁" : ""}
+                </td>
+                <td>{(agendamento.quadras as unknown as { nome: string })?.nome}</td>
+                <td>{(agendamento.clientes as unknown as { nome: string })?.nome}</td>
+                <td>
+                  <Badge tone={agendamento.status === "confirmado" ? "success" : "neutral"}>
+                    {agendamento.status}
+                  </Badge>
+                </td>
+                <td className="px-5">
+                  {agendamento.status === "confirmado" ? (
+                    <form action={cancelarAgendamento}>
+                      <input type="hidden" name="id" value={agendamento.id} />
+                      <button type="submit" className="text-sm text-neutral-500 underline hover:text-neutral-900">
+                        Cancelar
+                      </button>
+                    </form>
+                  ) : null}
+                </td>
+              </tr>
+            ))}
+            {agendamentos?.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-5 py-6 text-neutral-500">
+                  Nenhum agendamento para este dia
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </Card>
     </div>
   );
 }

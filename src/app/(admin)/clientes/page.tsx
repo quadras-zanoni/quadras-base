@@ -1,5 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { criarCliente } from "./actions";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
 
 export default async function ClientesPage({
   searchParams,
@@ -16,57 +19,51 @@ export default async function ClientesPage({
   const { data: clientes } = await query;
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-lg font-semibold">Clientes</h1>
+    <div className="space-y-6">
+      <h1 className="text-xl font-semibold tracking-tight">Clientes</h1>
 
-      <form method="get" className="flex gap-2">
-        <input
-          name="q"
-          defaultValue={q ?? ""}
-          placeholder="Buscar por nome ou telefone"
-          className="border border-neutral-300 px-2 py-1 text-sm"
-        />
-        <button type="submit" className="border border-neutral-300 px-3 py-1.5 text-sm">
-          Buscar
-        </button>
-      </form>
+      <Card>
+        <div className="flex flex-wrap items-end gap-4">
+          <form method="get" className="flex gap-2">
+            <Input name="q" defaultValue={q ?? ""} placeholder="Buscar por nome ou telefone" className="w-64" />
+            <Button type="submit" variant="secondary">
+              Buscar
+            </Button>
+          </form>
 
-      <form action={criarCliente} className="flex flex-wrap items-end gap-2">
-        <input name="nome" placeholder="Nome" required className="border border-neutral-300 px-2 py-1 text-sm" />
-        <input
-          name="telefone"
-          placeholder="Telefone/WhatsApp"
-          required
-          className="border border-neutral-300 px-2 py-1 text-sm"
-        />
-        <button type="submit" className="bg-black px-3 py-1.5 text-sm text-white">
-          Novo cliente
-        </button>
-      </form>
+          <form action={criarCliente} className="flex flex-wrap items-end gap-2">
+            <Input name="nome" placeholder="Nome" required className="w-40" />
+            <Input name="telefone" placeholder="Telefone/WhatsApp" required className="w-44" />
+            <Button type="submit">Novo cliente</Button>
+          </form>
+        </div>
+      </Card>
 
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-neutral-200 text-left text-neutral-500">
-            <th className="py-2">Nome</th>
-            <th>Telefone</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(clientes ?? []).map((cliente) => (
-            <tr key={cliente.id} className="border-b border-neutral-100">
-              <td className="py-2">{cliente.nome}</td>
-              <td>{cliente.telefone}</td>
+      <Card className="overflow-hidden p-0">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-neutral-200 text-left text-neutral-500">
+              <th className="px-5 py-3 font-medium">Nome</th>
+              <th className="font-medium">Telefone</th>
             </tr>
-          ))}
-          {clientes?.length === 0 ? (
-            <tr>
-              <td colSpan={2} className="py-4 text-neutral-500">
-                Nenhum cliente ainda
-              </td>
-            </tr>
-          ) : null}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {(clientes ?? []).map((cliente) => (
+              <tr key={cliente.id} className="border-b border-neutral-100 last:border-0">
+                <td className="px-5 py-3">{cliente.nome}</td>
+                <td>{cliente.telefone}</td>
+              </tr>
+            ))}
+            {clientes?.length === 0 ? (
+              <tr>
+                <td colSpan={2} className="px-5 py-6 text-neutral-500">
+                  Nenhum cliente ainda
+                </td>
+              </tr>
+            ) : null}
+          </tbody>
+        </table>
+      </Card>
     </div>
   );
 }
