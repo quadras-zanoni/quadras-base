@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { centavosParaReais } from "@/lib/money";
+import { ESPORTES_DISPONIVEIS } from "@/lib/esportes";
 import { criarQuadra, alternarAtivaQuadra } from "./actions";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -10,7 +11,7 @@ export default async function QuadrasPage() {
   const supabase = await createClient();
   const { data: quadras } = await supabase
     .from("quadras")
-    .select("id, nome, tipo_esporte, preco_hora_centavos, ativa")
+    .select("id, nome, tipos_esporte, preco_hora_centavos, ativa")
     .order("nome");
 
   return (
@@ -18,19 +19,28 @@ export default async function QuadrasPage() {
       <h1 className="text-xl font-semibold tracking-tight">Quadras</h1>
 
       <Card>
-        <form action={criarQuadra} className="flex flex-wrap items-end gap-2">
-          <Input name="nome" placeholder="Nome" required className="w-40" />
-          <Input name="tipo_esporte" placeholder="Tipo de esporte" required className="w-40" />
-          <Input
-            name="preco_hora_reais"
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="Preço/hora (R$)"
-            required
-            className="w-40"
-          />
-          <Button type="submit">Nova quadra</Button>
+        <form action={criarQuadra} className="space-y-3">
+          <div className="flex flex-wrap items-end gap-2">
+            <Input name="nome" placeholder="Nome" required className="w-40" />
+            <Input
+              name="preco_hora_reais"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Preço/hora (R$)"
+              required
+              className="w-40"
+            />
+            <Button type="submit">Nova quadra</Button>
+          </div>
+          <div className="flex flex-wrap gap-4">
+            {ESPORTES_DISPONIVEIS.map((esporte) => (
+              <label key={esporte.valor} className="flex items-center gap-2 text-sm text-neutral-700">
+                <input type="checkbox" name="tipos_esporte" value={esporte.valor} className="rounded border-neutral-300" />
+                {esporte.rotulo}
+              </label>
+            ))}
+          </div>
         </form>
       </Card>
 
@@ -39,7 +49,7 @@ export default async function QuadrasPage() {
           <thead>
             <tr className="border-b border-neutral-200 text-left text-neutral-500">
               <th className="px-5 py-3 font-medium">Nome</th>
-              <th className="font-medium">Esporte</th>
+              <th className="font-medium">Esportes</th>
               <th className="font-medium">Preço/hora</th>
               <th className="font-medium">Status</th>
               <th />
@@ -49,7 +59,7 @@ export default async function QuadrasPage() {
             {(quadras ?? []).map((quadra) => (
               <tr key={quadra.id} className="border-b border-neutral-100 last:border-0">
                 <td className="px-5 py-3">{quadra.nome}</td>
-                <td>{quadra.tipo_esporte}</td>
+                <td>{(quadra.tipos_esporte ?? []).join(", ")}</td>
                 <td>{centavosParaReais(quadra.preco_hora_centavos)}</td>
                 <td>
                   <Badge tone={quadra.ativa ? "success" : "neutral"}>

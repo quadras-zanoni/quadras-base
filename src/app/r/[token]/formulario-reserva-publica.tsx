@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 interface Quadra {
   id: string;
   nome: string;
-  tipo_esporte: string;
+  tipos_esporte: string[];
 }
 
 const selectClass =
@@ -70,7 +70,7 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
         <select value={quadraId} onChange={(e) => setQuadraId(e.target.value)} className={selectClass}>
           {quadras.map((quadra) => (
             <option key={quadra.id} value={quadra.id}>
-              {quadra.nome} ({quadra.tipo_esporte})
+              {quadra.nome} ({quadra.tipos_esporte.join(", ")})
             </option>
           ))}
         </select>

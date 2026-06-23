@@ -8,7 +8,7 @@ import { reaisParaCentavos } from "@/lib/money";
 export async function criarQuadra(formData: FormData) {
   const input = QuadraInputSchema.parse({
     nome: formData.get("nome"),
-    tipo_esporte: formData.get("tipo_esporte"),
+    tipos_esporte: formData.getAll("tipos_esporte"),
     preco_hora_centavos: reaisParaCentavos(formData.get("preco_hora_reais") as string),
   });
 

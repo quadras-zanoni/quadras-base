@@ -15,7 +15,7 @@ export default async function PaginaReservaPublica({
   const admin = createAdminClient();
   const { data: quadras } = await admin
     .from("quadras")
-    .select("id, nome, tipo_esporte")
+    .select("id, nome, tipos_esporte")
     .eq("tenant_id", tenant.id)
     .eq("ativa", true)
     .order("nome");
