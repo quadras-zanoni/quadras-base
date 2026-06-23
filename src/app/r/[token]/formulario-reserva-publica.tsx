@@ -14,6 +14,18 @@ interface Quadra {
 const selectClass =
   "w-full rounded-lg border border-neutral-200 px-3 py-2 text-sm outline-none focus:border-neutral-400";
 
+const DURACOES_PADRAO = [
+  { rotulo: "Meia horário", minutos: 30 },
+  { rotulo: "1 horário", minutos: 60 },
+  { rotulo: "2 horários", minutos: 120 },
+];
+
+function somarMinutos(hora: string, minutos: number): string {
+  const [h, m] = hora.split(":").map(Number);
+  const total = (h * 60 + m + minutos + 1440) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
 export function FormularioReservaPublica({ token, quadras }: { token: string; quadras: Quadra[] }) {
   const [quadraId, setQuadraId] = useState(quadras[0]?.id ?? "");
   const [data, setData] = useState("");
@@ -89,6 +101,23 @@ export function FormularioReservaPublica({ token, quadras }: { token: string; qu
         <div className="flex-1 space-y-1">
           <label className="text-xs font-medium text-neutral-500">Fim</label>
           <Input type="time" value={horaFim} onChange={(e) => setHoraFim(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-neutral-500">Duração</label>
+        <div className="flex gap-2">
+          {DURACOES_PADRAO.map((duracao) => (
+            <button
+              key={duracao.minutos}
+              type="button"
+              disabled={!horaInicio}
+              onClick={() => setHoraFim(somarMinutos(horaInicio, duracao.minutos))}
+              className="rounded-lg border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {duracao.rotulo}
+            </button>
+          ))}
         </div>
       </div>
 
