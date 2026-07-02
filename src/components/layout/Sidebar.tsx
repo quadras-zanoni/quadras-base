@@ -25,21 +25,6 @@ const navItems = [
   { href: '/link-cliente',      label: 'Link do Cliente',  icon: Link2 },
 ]
 
-function BrandMark({ size = 36 }: { size?: number }) {
-  return (
-    <div
-      className="rounded-[10px] flex items-center justify-center shrink-0 bg-brand"
-      style={{ width: size, height: size }}
-    >
-      <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" strokeWidth="2" />
-        <path d="M12 5v14" stroke="white" strokeWidth="2" />
-        <circle cx="12" cy="12" r="1.6" fill="white" />
-      </svg>
-    </div>
-  )
-}
-
 function NavLink({
   href, label, icon: Icon, active, badge,
 }: {
@@ -138,7 +123,8 @@ export function Sidebar() {
       {/* Mobile top bar */}
       <header className="lg:hidden fixed top-0 inset-x-0 z-40 flex items-center justify-between px-4 py-3 bg-surface border-b border-line">
         <div className="flex items-center gap-2">
-          <BrandMark size={28} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-arena-branca.png" alt="Arena do Parque" className="h-7 w-7 object-contain shrink-0" />
           <span className="font-bold text-ink text-sm tracking-tight">ARENA DO PARQUE</span>
         </div>
         <button
