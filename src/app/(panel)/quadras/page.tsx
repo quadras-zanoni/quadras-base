@@ -299,7 +299,8 @@ export default function QuadrasPage() {
               type="number"
               min="0"
               step="0.01"
-              value={form.pricePerHour}
+              placeholder="0,00"
+              value={form.pricePerHour || ''}
               onChange={e => setForm(p => ({ ...p, pricePerHour: Number(e.target.value) }))}
             />
             <Input
@@ -396,7 +397,8 @@ export default function QuadrasPage() {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={tier.price}
+                    placeholder="0,00"
+                    value={tier.price || ''}
                     onChange={e => updateTier(idx, 'price', Number(e.target.value))}
                   />
                 </div>

@@ -18,19 +18,25 @@ type BusySlot = { startTime: string; endTime: string }
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-function generateSlots(court: Court, busy: BusySlot[]): Slot[] {
+function generateSlots(court: Court, busy: BusySlot[], dateISO: string): Slot[] {
   const slots: Slot[] = []
   let current = parse(court.openTime, 'HH:mm', new Date())
   const close = parse(court.closeTime, 'HH:mm', new Date())
+
+  // se a data escolhida é hoje, horários que já começaram/passaram não aparecem
+  const now = new Date()
+  const isToday = dateISO === format(now, 'yyyy-MM-dd')
+  const nowStr  = format(now, 'HH:mm')
 
   while (current < close) {
     const next = addMinutes(current, court.duration)
     if (next > close) break
     const startStr = format(current, 'HH:mm')
     const endStr   = format(next,    'HH:mm')
+    current = next
+    if (isToday && startStr <= nowStr) continue   // horário passado → some
     const taken = busy.some(b => startStr < b.endTime && endStr > b.startTime)
     slots.push({ time: startStr, endTime: endStr, available: !taken })
-    current = next
   }
   return slots
 }
@@ -267,7 +273,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
     window.open(`https://wa.me/${withCountry}?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
-  const slots = selectedCourt ? generateSlots(selectedCourt, busySlots) : []
+  const slots = selectedCourt ? generateSlots(selectedCourt, busySlots, selectedDate) : []
   const today  = format(new Date(), 'yyyy-MM-dd')
 
   /* ─── Arena não encontrada ─── */
@@ -549,13 +555,16 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
                           ? 'bg-primary text-white border-[1.5px] border-primary'
                           : slot.available
                           ? 'border border-line hover:border-brand hover:text-brand text-ink'
-                          : 'bg-surface-2 text-subtle line-through border border-line',
+                          : 'bg-surface-2 text-subtle border border-line',
                       ].join(' ')}
                     >
                       {slot.available && !isSelected && (
                         <Clock size={10} className="text-brand" />
                       )}
-                      {slot.time}
+                      <span className={slot.available ? '' : 'line-through'}>{slot.time}</span>
+                      {!slot.available && (
+                        <span className="text-[9px] font-medium leading-none">reservado</span>
+                      )}
                     </button>
                   )
                 })}
@@ -574,7 +583,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded bg-surface-2 border border-line" />
-                Ocupado
+                Reservado
               </span>
             </div>
 
