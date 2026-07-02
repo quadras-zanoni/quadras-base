@@ -1,13 +1,34 @@
+export type Modality = 'volei' | 'beach_tennis' | 'futevolei'
+
+/** Faixa de preço: vale para os dias marcados dentro do intervalo [start, end).
+ *  days segue a convenção JS getDay(): 0=Dom, 1=Seg, ... 6=Sáb. */
+export interface PriceTier {
+  days: number[]
+  start: string   // "HH:MM"
+  end: string     // "HH:MM"
+  price: number   // preço/hora nesta faixa
+}
+
 export interface Court {
   id: string
   ownerId: string
   name: string
-  type: 'futebol_society' | 'futsal' | 'beach_tennis' | 'tenis' | 'volei' | 'outro'
-  pricePerHour: number
+  modalities: Modality[]
+  type?: string          // legado (tipo único antigo) — mantido só por compat
+  pricePerHour: number   // preço BASE / padrão (fallback quando nenhuma faixa casa)
+  priceTiers: PriceTier[]
   duration: number
   openTime: string
   closeTime: string
   status: 'ativa' | 'inativa'
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ArenaSettings {
+  ownerId: string
+  notifyWhatsapp: string
+  slug?: string // apelido do link público (ex: "arena-do-parque")
   createdAt: string
   updatedAt: string
 }
@@ -25,6 +46,7 @@ export interface Booking {
   startTime: string // HH:MM
   endTime: string // HH:MM
   value: number
+  modality?: string // modalidade escolhida pelo cliente (quando aplicável)
   status: 'pendente' | 'confirmado' | 'cancelado'
   cancelReason?: string
   cancelledAt?: string
@@ -99,11 +121,9 @@ export const PAYMENT_METHODS: Record<Sale['paymentMethod'], string> = {
   outro: 'Outro',
 }
 
-export const COURT_TYPES: Record<Court['type'], string> = {
-  futebol_society: 'Futebol Society',
-  futsal: 'Futsal',
-  beach_tennis: 'Beach Tennis',
-  tenis: 'Tênis',
+/** As 3 modalidades oficiais. Chave = valor no banco; valor = rótulo exibido. */
+export const MODALITIES: Record<Modality, string> = {
   volei: 'Vôlei',
-  outro: 'Outro',
+  beach_tennis: 'Beach Tennis',
+  futevolei: 'Futevôlei',
 }

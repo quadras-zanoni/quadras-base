@@ -12,7 +12,7 @@ import { ptBR } from 'date-fns/locale'
 import { Phone, MessageSquare, X, CheckCircle, Edit, MessageCircle, Clock, LayoutGrid, List } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
-import { Booking, Court } from '@/types'
+import { Booking, Court, Modality, MODALITIES } from '@/types'
 
 function fmt(val: number) {
   return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -209,7 +209,9 @@ export default function AgendaPage() {
                           {b.startTime} – {b.endTime}
                         </span>
                         <Badge variant={variant}>{label}</Badge>
-                        <span className="text-sm text-muted">{b.courtName}</span>
+                        <span className="text-sm text-muted">
+                          {b.courtName}{b.modality ? ` · ${MODALITIES[b.modality as Modality] ?? b.modality}` : ''}
+                        </span>
                       </div>
                       <div className="mt-2">
                         <p className="font-semibold text-ink">{b.clientName}</p>

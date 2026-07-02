@@ -2,18 +2,23 @@
 
 import { useState, useEffect, use } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Court, Booking, COURT_TYPES } from '@/types'
+import { Court, Modality, MODALITIES } from '@/types'
+import { slotValueAt } from '@/lib/pricing'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { format, addMinutes, parse } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Clock, CheckCircle, Calendar, Zap, ChevronLeft } from 'lucide-react'
+import { Clock, CheckCircle, Calendar, Zap, ChevronLeft, MessageCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 /* ─── tipos locais ─── */
 type Slot = { time: string; endTime: string; available: boolean }
+/* horário ocupado vindo da RPC get_booked_slots (sem dados de cliente) */
+type BusySlot = { startTime: string; endTime: string }
 
-function generateSlots(court: Court, bookings: Booking[]): Slot[] {
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+function generateSlots(court: Court, busy: BusySlot[]): Slot[] {
   const slots: Slot[] = []
   let current = parse(court.openTime, 'HH:mm', new Date())
   const close = parse(court.closeTime, 'HH:mm', new Date())
@@ -23,9 +28,7 @@ function generateSlots(court: Court, bookings: Booking[]): Slot[] {
     if (next > close) break
     const startStr = format(current, 'HH:mm')
     const endStr   = format(next,    'HH:mm')
-    const taken = bookings
-      .filter(b => b.status !== 'cancelado')
-      .some(b => startStr < b.endTime && endStr > b.startTime)
+    const taken = busy.some(b => startStr < b.endTime && endStr > b.startTime)
     slots.push({ time: startStr, endTime: endStr, available: !taken })
     current = next
   }
@@ -68,34 +71,64 @@ function BrandMark() {
 export default function ReservarPage({ params }: { params: Promise<{ ownerId: string }> }) {
   const { ownerId } = use(params)
 
-  const [courts, setCourts]               = useState<Court[]>([])
-  const [loadingCourts, setLoadingCourts] = useState(true)
-  const [selectedCourt, setSelectedCourt] = useState<Court | null>(null)
-  const [selectedDate, setSelectedDate]   = useState(format(new Date(), 'yyyy-MM-dd'))
-  const [dayBookings, setDayBookings]     = useState<Booking[]>([])
-  const [loadingSlots, setLoadingSlots]   = useState(false)
+  /* uuid efetivo (pode vir de resolução de slug) */
+  const [resolvedOwnerId, setResolvedOwnerId]   = useState('')
+  const [arenaNotFound, setArenaNotFound]        = useState(false)
+  const [courts, setCourts]                      = useState<Court[]>([])
+  const [loadingCourts, setLoadingCourts]        = useState(true)
+  const [selectedCourt, setSelectedCourt]        = useState<Court | null>(null)
+  const [selectedModality, setSelectedModality]  = useState<Modality | null>(null)
+  const [selectedDate, setSelectedDate]          = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [busySlots, setBusySlots]                = useState<BusySlot[]>([])
+  const [loadingSlots, setLoadingSlots]          = useState(false)
   /* multi-slot: array de slots selecionados */
-  const [selectedSlots, setSelectedSlots] = useState<Slot[]>([])
-  const [clientName, setClientName]       = useState('')
-  const [clientPhone, setClientPhone]     = useState('')
-  const [saving, setSaving]               = useState(false)
-  const [success, setSuccess]             = useState(false)
+  const [selectedSlots, setSelectedSlots]        = useState<Slot[]>([])
+  const [clientName, setClientName]              = useState('')
+  const [clientPhone, setClientPhone]            = useState('')
+  const [saving, setSaving]                      = useState(false)
+  const [success, setSuccess]                    = useState(false)
   /* slots confirmados (para exibir na tela de sucesso) */
-  const [confirmedSlots, setConfirmedSlots] = useState<Slot[]>([])
+  const [confirmedSlots, setConfirmedSlots]      = useState<Slot[]>([])
+  /* modalidade confirmada (salva no momento do submit) */
+  const [confirmedModality, setConfirmedModality] = useState<Modality | null>(null)
+  /* número de WhatsApp da arena — botão "avisar a arena" na tela de sucesso */
+  const [arenaWhatsapp, setArenaWhatsapp]        = useState('')
 
-  /* ─── carregar quadras ─── */
+  /* ─── resolver slug → uuid + carregar quadras ─── */
   useEffect(() => {
     async function load() {
+      /* 1. Resolver ownerId (UUID direto ou slug legível) */
+      let ownerUuid = ownerId
+      if (!UUID_REGEX.test(ownerId)) {
+        const { data: slugData, error: slugError } = await supabase
+          .rpc('resolve_arena_slug', { p_slug: ownerId })
+        /* o retorno pode vir como scalar string ou array[0] */
+        const resolved = Array.isArray(slugData) ? slugData[0] : slugData
+        if (slugError || !resolved) {
+          setArenaNotFound(true)
+          setLoadingCourts(false)
+          return
+        }
+        ownerUuid = resolved as string
+      }
+      setResolvedOwnerId(ownerUuid)
+
+      /* 2. Carregar quadras */
       const { data } = await supabase
-        .from('courts')
-        .select('*')
-        .eq('owner_id', ownerId)
-        .eq('status', 'ativa')
-      setCourts((data || []).map(row => ({
+        .rpc('get_public_courts', { p_owner_id: ownerUuid })
+      const rows = (data || []) as Array<{
+        id: string; owner_id: string; name: string
+        modalities: Modality[]
+        price_tiers: Court['priceTiers']
+        price_per_hour: number; duration: number; open_time: string
+        close_time: string; status: string; created_at: string; updated_at: string
+      }>
+      setCourts(rows.map(row => ({
         id:           row.id,
         ownerId:      row.owner_id,
         name:         row.name,
-        type:         row.type,
+        modalities:   row.modalities  || [],
+        priceTiers:   row.price_tiers || [],
         pricePerHour: row.price_per_hour,
         duration:     row.duration,
         openTime:     row.open_time,
@@ -104,42 +137,38 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
         createdAt:    row.created_at,
         updatedAt:    row.updated_at,
       } as Court)))
+
+      /* 3. Número de WhatsApp da arena (RPC pública, só o número) */
+      const { data: arena } = await supabase
+        .rpc('get_public_arena', { p_owner_id: ownerUuid })
+      const waRow = (arena || [])[0] as { notify_whatsapp: string } | undefined
+      setArenaWhatsapp(waRow?.notify_whatsapp || '')
+
       setLoadingCourts(false)
     }
     load()
   }, [ownerId])
 
-  /* ─── carregar bookings do dia ─── */
+  /* ─── carregar horários ocupados do dia (sem dados de cliente) ─── */
   useEffect(() => {
-    if (!selectedCourt || !selectedDate) return
+    if (!selectedCourt || !selectedDate || !resolvedOwnerId) return
     setLoadingSlots(true)
     setSelectedSlots([])
 
     supabase
-      .from('bookings')
-      .select('*')
-      .eq('owner_id', ownerId)
-      .eq('court_id', selectedCourt.id)
-      .eq('date', selectedDate)
+      .rpc('get_booked_slots', {
+        p_owner_id: resolvedOwnerId,
+        p_court_id: selectedCourt.id,
+        p_date:     selectedDate,
+      })
       .then(({ data }) => {
-        setDayBookings((data || []).map(row => ({
-          id:          row.id,
-          ownerId:     row.owner_id,
-          courtId:     row.court_id,
-          courtName:   row.court_name,
-          clientName:  row.client_name,
-          clientPhone: row.client_phone,
-          date:        row.date,
-          startTime:   row.start_time,
-          endTime:     row.end_time,
-          value:       row.value,
-          status:      row.status,
-          createdAt:   row.created_at,
-          updatedAt:   row.updated_at,
-        } as Booking)))
+        setBusySlots((data || []).map((row: { start_time: string; end_time: string }) => ({
+          startTime: row.start_time,
+          endTime:   row.end_time,
+        })))
         setLoadingSlots(false)
       })
-  }, [selectedCourt, selectedDate, ownerId])
+  }, [selectedCourt, selectedDate, resolvedOwnerId])
 
   /* ─── toggle de slot ─── */
   function toggleSlot(slot: Slot) {
@@ -150,12 +179,9 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
     })
   }
 
-  /* ─── valor por slot e total ─── */
-  function slotValue(court: Court) {
-    return court.pricePerHour * (court.duration / 60)
-  }
-  const totalValue = selectedCourt
-    ? selectedSlots.length * slotValue(selectedCourt)
+  /* ─── valor total: soma slotValueAt de cada slot selecionado ─── */
+  const totalValue = selectedCourt && selectedDate
+    ? selectedSlots.reduce((sum, s) => sum + slotValueAt(selectedCourt, selectedDate, s.time), 0)
     : 0
 
   /* ─── confirmar reserva (multi-slot, aborta se qualquer conflito) ─── */
@@ -164,17 +190,23 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
     if (!clientName.trim())  return toast.error('Informe seu nome completo')
     if (!clientPhone.trim()) return toast.error('Informe seu telefone')
 
+    /* validar modalidade quando há mais de uma opção */
+    if (selectedCourt.modalities.length > 1 && !selectedModality) {
+      return toast.error('Escolha a modalidade que vai jogar')
+    }
+    /* auto-resolve se só há uma modalidade */
+    const modality: Modality | null = selectedModality ?? (selectedCourt.modalities[0] ?? null)
+
     setSaving(true)
     try {
-      /* busca bookings atuais para checar conflito */
-      const { data: existing } = await supabase
-        .from('bookings')
-        .select('status, start_time, end_time')
-        .eq('owner_id', ownerId)
-        .eq('court_id', selectedCourt.id)
-        .eq('date', selectedDate)
-
-      const active = (existing || []).filter(b => b.status !== 'cancelado')
+      /* checagem de conflito client-side (UX). A garantia real é a trava
+         uq_booking_active_slot no banco + a transação da RPC. */
+      const { data: busy } = await supabase.rpc('get_booked_slots', {
+        p_owner_id: resolvedOwnerId,
+        p_court_id: selectedCourt.id,
+        p_date:     selectedDate,
+      })
+      const active = (busy || []) as { start_time: string; end_time: string }[]
 
       const conflicting = selectedSlots.filter(slot =>
         active.some(b => slot.time < b.end_time && slot.endTime > b.start_time)
@@ -189,26 +221,26 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
         return
       }
 
-      /* insere um booking por slot */
-      const value = slotValue(selectedCourt)
-      const inserts = selectedSlots.map(slot => ({
-        owner_id:     ownerId,
-        court_id:     selectedCourt.id,
-        court_name:   selectedCourt.name,
-        client_name:  clientName.trim(),
-        client_phone: clientPhone.trim(),
-        notes:        '',
-        date:         selectedDate,
-        start_time:   slot.time,
-        end_time:     slot.endTime,
-        value,
-        status: 'pendente',
-      }))
-
-      const { error } = await supabase.from('bookings').insert(inserts)
+      /* cria todas as reservas numa transação (all-or-nothing) via RPC */
+      const { error } = await supabase.rpc('create_public_bookings', {
+        p_owner_id:     resolvedOwnerId,
+        p_court_id:     selectedCourt.id,
+        p_court_name:   selectedCourt.name,
+        p_client_name:  clientName.trim(),
+        p_client_phone: clientPhone.trim(),
+        p_date:         selectedDate,
+        p_slots:        selectedSlots.map(s => ({
+          start_time: s.time,
+          end_time:   s.endTime,
+          value:      slotValueAt(selectedCourt, selectedDate, s.time),
+        })),
+        p_value:        slotValueAt(selectedCourt, selectedDate, selectedSlots[0].time),
+        p_modality:     modality,
+      })
       if (error) throw error
 
       setConfirmedSlots(selectedSlots)
+      setConfirmedModality(modality)
       setSuccess(true)
     } catch (err) {
       console.error(err)
@@ -218,11 +250,48 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
     }
   }
 
-  const slots = selectedCourt ? generateSlots(selectedCourt, dayBookings) : []
+  /* ─── avisar a arena no WhatsApp (click-to-chat / wa.me) ─── */
+  function notifyArenaWhatsApp() {
+    const cleaned = arenaWhatsapp.replace(/\D/g, '')
+    const withCountry = cleaned.startsWith('55') ? cleaned : `55${cleaned}`
+    const dateStr = format(new Date(selectedDate + 'T12:00:00'), 'dd/MM/yyyy', { locale: ptBR })
+    const horarios = confirmedSlots.map(s => `${s.time}–${s.endTime}`).join(', ')
+    const modalityLabel = confirmedModality ? MODALITIES[confirmedModality] : ''
+    const msg =
+      `Olá! Sou ${clientName}, acabei de solicitar uma reserva:\n` +
+      `Quadra: ${selectedCourt?.name}\n` +
+      (modalityLabel ? `Modalidade: ${modalityLabel}\n` : '') +
+      `Data: ${dateStr}\n` +
+      `Horário(s): ${horarios}\n\n` +
+      `Pode confirmar?`
+    window.open(`https://wa.me/${withCountry}?text=${encodeURIComponent(msg)}`, '_blank')
+  }
+
+  const slots = selectedCourt ? generateSlots(selectedCourt, busySlots) : []
   const today  = format(new Date(), 'yyyy-MM-dd')
+
+  /* ─── Arena não encontrada ─── */
+  if (arenaNotFound) {
+    return (
+      <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
+        <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card max-w-md w-full p-8 text-center">
+          <h2 className="text-xl font-bold text-ink mb-2">Arena não encontrada</h2>
+          <p className="text-muted text-sm leading-relaxed">
+            O link que você acessou não corresponde a nenhuma arena cadastrada.
+            Verifique o endereço e tente novamente.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   /* ─── Tela de sucesso ─── */
   if (success) {
+    /* total dos slots confirmados (com preço por faixa) */
+    const confirmedTotal = selectedCourt
+      ? confirmedSlots.reduce((sum, s) => sum + slotValueAt(selectedCourt, selectedDate, s.time), 0)
+      : 0
+
     return (
       <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
         <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card max-w-md w-full p-8 text-center">
@@ -247,6 +316,12 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
               <span className="text-muted">Quadra</span>
               <span className="font-semibold text-ink text-right">{selectedCourt?.name}</span>
             </div>
+            {confirmedModality && (
+              <div className="flex justify-between gap-4">
+                <span className="text-muted">Modalidade</span>
+                <span className="font-semibold text-ink text-right">{MODALITIES[confirmedModality]}</span>
+              </div>
+            )}
             <div className="flex justify-between gap-4">
               <span className="text-muted">Data</span>
               <span className="font-semibold text-ink text-right">
@@ -263,7 +338,9 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
                 <div key={slot.time} className="flex justify-between gap-4">
                   <span className="text-subtle text-xs">{slot.time} – {slot.endTime}</span>
                   <span className="text-xs font-medium text-brand">
-                    R$ {selectedCourt ? slotValue(selectedCourt).toFixed(2) : '—'}
+                    R$ {selectedCourt
+                      ? slotValueAt(selectedCourt, selectedDate, slot.time).toFixed(2)
+                      : '—'}
                   </span>
                 </div>
               ))}
@@ -273,7 +350,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
               <div className="flex justify-between gap-4 pt-1 border-t border-line">
                 <span className="text-muted font-semibold">Total</span>
                 <span className="font-bold text-ink">
-                  R$ {(selectedCourt ? confirmedSlots.length * slotValue(selectedCourt) : 0).toFixed(2)}
+                  R$ {confirmedTotal.toFixed(2)}
                 </span>
               </div>
             )}
@@ -284,11 +361,23 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
             </div>
           </div>
 
+          {arenaWhatsapp && (
+            <Button
+              onClick={notifyArenaWhatsApp}
+              variant="primary"
+              className="w-full mb-3"
+              size="lg"
+            >
+              <MessageCircle size={18} /> Avisar a arena no WhatsApp
+            </Button>
+          )}
+
           <Button
             onClick={() => {
               setSuccess(false)
               setSelectedSlots([])
               setConfirmedSlots([])
+              setConfirmedModality(null)
               setClientName('')
               setClientPhone('')
             }}
@@ -346,6 +435,8 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
                     onClick={() => {
                       setSelectedCourt(court)
                       setSelectedSlots([])
+                      /* auto-seleciona quando há apenas uma modalidade */
+                      setSelectedModality(court.modalities.length === 1 ? court.modalities[0] : null)
                     }}
                     className={[
                       'p-4 rounded-[var(--radius-ctl)] text-left transition-all',
@@ -355,13 +446,38 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
                     ].join(' ')}
                   >
                     <p className="font-semibold text-ink text-sm">{court.name}</p>
-                    <p className="text-xs text-muted mt-0.5">{COURT_TYPES[court.type]}</p>
+                    <p className="text-xs text-muted mt-0.5">
+                      {court.modalities.map(m => MODALITIES[m]).join(' · ')}
+                    </p>
                     <p className={['text-sm font-bold mt-2', active ? 'text-brand' : 'text-muted'].join(' ')}>
                       R$ {court.pricePerHour.toFixed(2)}<span className="font-normal text-xs">/hora</span>
                     </p>
                   </button>
                 )
               })}
+            </div>
+          )}
+
+          {/* Seletor de modalidade — aparece quando a quadra tem mais de uma */}
+          {selectedCourt && selectedCourt.modalities.length > 1 && (
+            <div className="mt-4 pt-4 border-t border-line">
+              <p className="text-xs text-muted mb-2 font-medium">Qual modalidade vai jogar?</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedCourt.modalities.map(mod => (
+                  <button
+                    key={mod}
+                    onClick={() => setSelectedModality(mod)}
+                    className={[
+                      'px-3 py-1.5 rounded-full text-sm font-medium transition-all border',
+                      selectedModality === mod
+                        ? 'bg-brand text-white border-brand'
+                        : 'bg-surface border-line text-ink hover:border-brand/40',
+                    ].join(' ')}
+                  >
+                    {MODALITIES[mod]}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -371,6 +487,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
           <div className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-5">
             <BackButton onClick={() => {
               setSelectedCourt(null)
+              setSelectedModality(null)
               setSelectedSlots([])
             }} />
             <h2 className="text-xs font-semibold text-ink tracking-widest mb-4 flex items-center gap-2 uppercase">
@@ -486,16 +603,23 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
                 <Zap size={16} className="text-primary mt-0.5 shrink-0" />
                 <div className="text-sm flex-1 min-w-0">
                   <p className="font-semibold text-ink">{selectedCourt?.name}</p>
+                  {selectedModality && (
+                    <p className="text-xs text-brand font-medium mt-0.5">
+                      {MODALITIES[selectedModality]}
+                    </p>
+                  )}
                   <p className="text-muted text-xs mt-0.5">
                     {format(new Date(selectedDate + 'T12:00:00'), "dd/MM/yyyy", { locale: ptBR })}
                   </p>
-                  {/* lista de horários selecionados */}
+                  {/* lista de horários selecionados com valor por faixa */}
                   <div className="mt-2 space-y-0.5">
                     {selectedSlots.map(slot => (
                       <div key={slot.time} className="flex justify-between text-xs">
                         <span className="text-ink">{slot.time} – {slot.endTime}</span>
                         <span className="text-muted">
-                          R$ {selectedCourt ? slotValue(selectedCourt).toFixed(2) : '—'}
+                          R$ {selectedCourt
+                            ? slotValueAt(selectedCourt, selectedDate, slot.time).toFixed(2)
+                            : '—'}
                         </span>
                       </div>
                     ))}

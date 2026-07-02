@@ -8,8 +8,10 @@ function mapCourt(row: Record<string, unknown>): Court {
     id: row.id as string,
     ownerId: row.owner_id as string,
     name: row.name as string,
-    type: row.type as Court['type'],
+    modalities: (row.modalities as Court['modalities']) ?? [],
+    type: (row.type as string) ?? undefined,
     pricePerHour: row.price_per_hour as number,
+    priceTiers: (row.price_tiers as Court['priceTiers']) ?? [],
     duration: row.duration as number,
     openTime: row.open_time as string,
     closeTime: row.close_time as string,
@@ -43,8 +45,9 @@ export function useCourts() {
     const { error } = await supabase.from('courts').insert({
       owner_id: user.id,
       name: data.name,
-      type: data.type,
+      modalities: data.modalities,
       price_per_hour: data.pricePerHour,
+      price_tiers: data.priceTiers,
       duration: data.duration,
       open_time: data.openTime,
       close_time: data.closeTime,
@@ -57,8 +60,9 @@ export function useCourts() {
   async function updateCourt(id: string, data: Partial<Court>) {
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() }
     if (data.name !== undefined) patch.name = data.name
-    if (data.type !== undefined) patch.type = data.type
+    if (data.modalities !== undefined) patch.modalities = data.modalities
     if (data.pricePerHour !== undefined) patch.price_per_hour = data.pricePerHour
+    if (data.priceTiers !== undefined) patch.price_tiers = data.priceTiers
     if (data.duration !== undefined) patch.duration = data.duration
     if (data.openTime !== undefined) patch.open_time = data.openTime
     if (data.closeTime !== undefined) patch.close_time = data.closeTime

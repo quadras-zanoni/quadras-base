@@ -18,6 +18,7 @@ function mapBooking(row: Record<string, unknown>): Booking {
     startTime: row.start_time as string,
     endTime: row.end_time as string,
     value: row.value as number,
+    modality: row.modality as string | undefined,
     status: row.status as Booking['status'],
     cancelReason: row.cancel_reason as string | undefined,
     cancelledAt: row.cancelled_at as string | undefined,
@@ -68,6 +69,7 @@ export function useBookings(dateFilter?: string) {
         start_time: data.startTime,
         end_time: data.endTime,
         value: data.value,
+        modality: data.modality ?? null,
         status: data.status,
       })
       .select('id')
@@ -89,6 +91,7 @@ export function useBookings(dateFilter?: string) {
     if (data.startTime !== undefined) patch.start_time = data.startTime
     if (data.endTime !== undefined) patch.end_time = data.endTime
     if (data.value !== undefined) patch.value = data.value
+    if (data.modality !== undefined) patch.modality = data.modality
     if (data.status !== undefined) patch.status = data.status
     if (data.cancelReason !== undefined) patch.cancel_reason = data.cancelReason
     const { error } = await supabase.from('bookings').update(patch).eq('id', id)

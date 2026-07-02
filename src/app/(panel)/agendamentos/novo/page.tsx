@@ -12,7 +12,8 @@ import { format, addMinutes, parse, addWeeks, getDay, addDays, isAfter, parseISO
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { Clock, CheckCircle, RefreshCw, User, UserPlus, ChevronLeft } from 'lucide-react'
-import { Court } from '@/types'
+import { Court, MODALITIES, Modality } from '@/types'
+import { slotValueAt, minHourlyPrice } from '@/lib/pricing'
 
 const DAYS_OF_WEEK = [
   { label: 'Dom', value: 0 },
@@ -80,6 +81,7 @@ export default function NovoAgendamentoPage() {
   const [customValue, setCustomValue] = useState('')
   const [discount, setDiscount] = useState('')
   const [saving, setSaving] = useState(false)
+  const [modality, setModality] = useState<Modality | ''>('')
 
   // Recorrência
   const [isRecurring, setIsRecurring] = useState(false)
@@ -102,18 +104,25 @@ export default function NovoAgendamentoPage() {
     ? format(addMinutes(parse(startTime, 'HH:mm', new Date()), selectedCourt.duration), 'HH:mm')
     : ''
 
-  const defaultValue = selectedCourt ? selectedCourt.pricePerHour * (selectedCourt.duration / 60) : 0
+  // Valor de 1 slot no horário selecionado (modo recorrente); cai no openTime quando ainda sem horário
+  const singleSlotDefault = selectedCourt
+    ? slotValueAt(selectedCourt, date, startTime || selectedCourt.openTime)
+    : 0
+
+  // Soma do valor de cada slot selecionado individualmente (modo multi-slot)
+  const slotsAutoTotal = selectedCourt && selectedSlots.length > 0
+    ? selectedSlots.reduce((sum, s) => sum + slotValueAt(selectedCourt, date, s), 0)
+    : 0
 
   // --- Cálculo de valor para modo não-recorrente multi-slot ---
   const slotCount = selectedSlots.length
-  const perSlotDefault = defaultValue // valor por slot = preço da duração
-  const multiTotal = customValue !== '' ? Number(customValue) : (perSlotDefault * (slotCount || 1))
+  const multiTotal = customValue !== '' ? Number(customValue) : slotsAutoTotal
   const discountVal = discount !== '' ? Math.max(0, Number(discount)) : 0
   const finalMultiTotal = Math.max(0, multiTotal - discountVal)
   const valuePerSlot = slotCount > 0 ? finalMultiTotal / slotCount : finalMultiTotal
 
   // --- Valor para modo recorrente (comportamento original) ---
-  const finalValue = customValue !== '' ? Number(customValue) : defaultValue
+  const finalValue = customValue !== '' ? Number(customValue) : singleSlotDefault
 
   // Clientes ordenados por nome (já vêm ordenados do hook)
   const sortedClients = useMemo(() => clients, [clients])
@@ -122,8 +131,14 @@ export default function NovoAgendamentoPage() {
     setCourtId(id)
     setStartTime('')
     setSelectedSlots([])
+    setCustomValue('')
     const court = courts.find(c => c.id === id)
-    if (court) setCustomValue(String(court.pricePerHour * (court.duration / 60)))
+    if (court) {
+      // Auto-seleciona modalidade quando a quadra suporta apenas uma
+      setModality(court.modalities.length === 1 ? court.modalities[0] : '')
+    } else {
+      setModality('')
+    }
   }
 
   function toggleDay(day: number) {
@@ -202,6 +217,7 @@ export default function NovoAgendamentoPage() {
             clientId: clientId || undefined, clientName, clientPhone, notes,
             date, startTime: slot, endTime: slotEnd,
             value: valuePerSlot,
+            modality: modality || undefined,
             status,
           })
           created++
@@ -234,7 +250,9 @@ export default function NovoAgendamentoPage() {
             courtId, courtName: selectedCourt!.name,
             clientId: clientId || undefined, clientName, clientPhone,
             notes: notes ? `[Recorrente] ${notes}` : '[Recorrente]',
-            date: d, startTime, endTime, value: finalValue, status,
+            date: d, startTime, endTime, value: finalValue,
+            modality: modality || undefined,
+            status,
           })
           created++
         }
@@ -274,9 +292,33 @@ export default function NovoAgendamentoPage() {
             <Select label="Quadra" value={courtId} onChange={e => handleCourtChange(e.target.value)}>
               <option value="">Selecione uma quadra</option>
               {activeCourts.map(c => (
-                <option key={c.id} value={c.id}>{c.name} – R$ {c.pricePerHour.toFixed(2)}/hora</option>
+                <option key={c.id} value={c.id}>
+                  {c.name} – {c.priceTiers?.length ? `a partir de R$ ${minHourlyPrice(c).toFixed(2)}/hora` : `R$ ${c.pricePerHour.toFixed(2)}/hora`}
+                </option>
               ))}
             </Select>
+
+            {selectedCourt && selectedCourt.modalities.length > 1 && (
+              <div>
+                <label className="block text-[13px] font-medium text-ink mb-2">Modalidade</label>
+                <div className="flex gap-2 flex-wrap">
+                  {selectedCourt.modalities.map(mod => (
+                    <button
+                      key={mod}
+                      type="button"
+                      onClick={() => setModality(mod)}
+                      className={`px-3 py-1.5 rounded-[var(--radius-ctl)] text-sm font-medium border transition-colors ${
+                        modality === mod
+                          ? 'bg-primary text-white border-primary'
+                          : 'bg-surface text-ink border-line hover:border-brand hover:text-brand'
+                      }`}
+                    >
+                      {MODALITIES[mod]}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <Input
               label="Data inicial"
@@ -376,7 +418,7 @@ export default function NovoAgendamentoPage() {
                     step="0.01"
                     value={customValue}
                     onChange={e => setCustomValue(e.target.value)}
-                    placeholder={(perSlotDefault * (slotCount || 1)).toFixed(2)}
+                    placeholder={slotsAutoTotal.toFixed(2)}
                   />
                   <Input
                     label="Desconto (R$)"
@@ -413,7 +455,7 @@ export default function NovoAgendamentoPage() {
                   step="0.01"
                   value={customValue}
                   onChange={e => setCustomValue(e.target.value)}
-                  placeholder={defaultValue.toFixed(2)}
+                  placeholder={singleSlotDefault.toFixed(2)}
                 />
                 <Select label="Status inicial" value={status} onChange={e => setStatus(e.target.value as 'pendente' | 'confirmado')}>
                   <option value="confirmado">Confirmado</option>

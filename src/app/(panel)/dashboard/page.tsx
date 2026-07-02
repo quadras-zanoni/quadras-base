@@ -12,7 +12,7 @@ import { Panel, Donut, MiniCourt, ProgressBar, ComingSoon } from '@/components/d
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import {
-  Calendar, CheckCircle2, Clock, DollarSign, Flag, Filter, Plus, Bell, Package,
+  Calendar, CheckCircle2, Clock, DollarSign, Flag, Plus, Bell, Package,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -91,18 +91,21 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2.5">
-          <Button variant="secondary" size="md"><Filter size={16} /> Filtros</Button>
           <Link href="/agendamentos/novo">
             <Button variant="primary" size="md"><Plus size={16} /> Novo agendamento</Button>
           </Link>
-          <button className="relative w-10 h-10 rounded-[var(--radius-ctl)] border border-line bg-surface text-muted hover:text-ink flex items-center justify-center transition-colors">
+          <Link
+            href="/agenda"
+            title={pending.length > 0 ? `${pending.length} reserva(s) pendente(s)` : 'Sem pendências'}
+            className="relative w-10 h-10 rounded-[var(--radius-ctl)] border border-line bg-surface text-muted hover:text-ink flex items-center justify-center transition-colors"
+          >
             <Bell size={18} />
             {pending.length > 0 && (
               <span className="absolute -top-1 -right-1 w-[18px] h-[18px] text-[10px] font-bold rounded-full bg-violet text-white flex items-center justify-center">
                 {pending.length}
               </span>
             )}
-          </button>
+          </Link>
         </div>
       </div>
 
