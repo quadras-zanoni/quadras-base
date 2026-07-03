@@ -12,21 +12,9 @@ interface Props {
   qrCode: string
   qrCodeBase64: string
   valor: number
-}
-
-function BrandMark({ size = 40 }: { size?: number }) {
-  return (
-    <div
-      className="rounded-[10px] flex items-center justify-center shrink-0 bg-brand"
-      style={{ width: size, height: size }}
-    >
-      <svg width={size * 0.5} height={size * 0.5} viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" strokeWidth="2" />
-        <path d="M12 5v14" stroke="white" strokeWidth="2" />
-        <circle cx="12" cy="12" r="1.6" fill="white" />
-      </svg>
-    </div>
-  )
+  emTeste: boolean
+  diasRestantes: number | null
+  dataVencimento: string | null
 }
 
 export default function SubscriptionClient({
@@ -35,6 +23,9 @@ export default function SubscriptionClient({
   qrCode,
   qrCodeBase64,
   valor,
+  emTeste,
+  diasRestantes,
+  dataVencimento,
 }: Props) {
   const router = useRouter()
   const [paid, setPaid] = useState(false)
@@ -47,7 +38,9 @@ export default function SubscriptionClient({
           `${billingHubUrl}/api/subscription/check?tenant_key=${tenantKey}`
         )
         const data = await res.json()
-        if (data.active) {
+        // Confirma quando um pagamento é registrado (em teste, "active" já é true;
+        // por isso checamos em_teste virar false = passou a pago).
+        if (data.active && data.em_teste === false) {
           setPaid(true)
           setTimeout(() => router.push('/'), 2000)
         }
@@ -70,6 +63,11 @@ export default function SubscriptionClient({
     }
   }
 
+  const dataFmt = dataVencimento
+    ? new Date(dataVencimento).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })
+    : null
+  const dias = diasRestantes != null ? Math.max(diasRestantes, 0) : null
+
   if (paid) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-canvas p-4">
@@ -82,7 +80,7 @@ export default function SubscriptionClient({
           <h2 className="text-xl font-bold text-ink mb-2">
             Pagamento confirmado!
           </h2>
-          <p className="text-sm text-muted">Redirecionando para o sistema...</p>
+          <p className="text-sm text-muted">Assinatura ativa por 30 dias. Redirecionando...</p>
         </Card>
       </div>
     )
@@ -100,10 +98,17 @@ export default function SubscriptionClient({
 
         {/* Badge de aviso */}
         <div className="flex justify-center mb-5">
-          <Badge variant="yellow">
-            <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse mr-1" />
-            Acesso bloqueado
-          </Badge>
+          {emTeste ? (
+            <Badge variant="blue">
+              <span className="w-1.5 h-1.5 rounded-full bg-info mr-1" />
+              Período de teste
+            </Badge>
+          ) : (
+            <Badge variant="yellow">
+              <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse mr-1" />
+              Acesso bloqueado
+            </Badge>
+          )}
         </div>
 
         {/* Card principal */}
@@ -112,17 +117,20 @@ export default function SubscriptionClient({
           {/* Título */}
           <div className="text-center mb-6">
             <h1 className="text-xl font-bold text-ink mb-1.5">
-              Mensalidade vencida
+              {emTeste ? 'Ative sua assinatura' : 'Mensalidade vencida'}
             </h1>
             <p className="text-sm text-muted leading-relaxed">
-              Sua mensalidade venceu. Renove para continuar usando o sistema.
+              {emTeste
+                ? `${dias != null ? (dias === 0 ? 'Seu teste termina hoje. ' : `Você está no teste — faltam ${dias} dia${dias > 1 ? 's' : ''}. `) : 'Você está no período de teste. '}` +
+                  `Pague o PIX abaixo para garantir a continuidade${dataFmt ? ` (cobrança em ${dataFmt})` : ''}.`
+                : 'Sua mensalidade venceu. Renove para continuar usando o sistema.'}
             </p>
           </div>
 
           {/* Valor */}
           <div className="text-center mb-5 py-3 border-b border-line">
             <p className="text-xs font-medium text-subtle uppercase tracking-wide mb-1">
-              Valor da mensalidade
+              {emTeste ? 'Assinatura mensal' : 'Valor da mensalidade'}
             </p>
             <p className="text-3xl font-bold text-ink">
               R$&nbsp;{valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
