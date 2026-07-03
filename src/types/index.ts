@@ -127,3 +127,16 @@ export const MODALITIES: Record<Modality, string> = {
   beach_tennis: 'Beach Tennis',
   futevolei: 'Futevôlei',
 }
+
+/** Durações de reserva que o cliente pode escolher (em minutos). */
+export const BOOKING_DURATIONS = [30, 60, 90] as const
+
+/** Rótulo amigável de uma duração em minutos (ex: 90 → "1h30"). */
+export function durationLabel(min: number): string {
+  if (min === 30) return '30 min'
+  if (min === 60) return '1 hora'
+  if (min === 90) return '1h30'
+  const h = Math.floor(min / 60)
+  const m = min % 60
+  return m ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`
+}

@@ -12,8 +12,10 @@ import { format, addMinutes, parse, addWeeks, getDay, addDays, isAfter, parseISO
 import { ptBR } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { Clock, CheckCircle, RefreshCw, User, UserPlus, ChevronLeft } from 'lucide-react'
-import { Court, MODALITIES, Modality } from '@/types'
+import { Court, MODALITIES, Modality, BOOKING_DURATIONS, durationLabel } from '@/types'
 import { slotValueAt, minHourlyPrice } from '@/lib/pricing'
+
+const GRID_STEP = 30  // grade de 30 em 30 min (menor duração)
 
 const DAYS_OF_WEEK = [
   { label: 'Dom', value: 0 },
@@ -25,20 +27,21 @@ const DAYS_OF_WEEK = [
   { label: 'Sáb', value: 6 },
 ]
 
-function generateTimeSlots(court: Court, existingBookings: Array<{ startTime: string; endTime: string; status: string }>) {
-  const slots: { time: string; available: boolean }[] = []
+function generateTimeSlots(court: Court, existingBookings: Array<{ startTime: string; endTime: string; status: string }>, durationMin: number) {
+  const slots: { time: string; endTime: string; available: boolean }[] = []
   let current = parse(court.openTime, 'HH:mm', new Date())
   const close = parse(court.closeTime, 'HH:mm', new Date())
   while (current < close) {
-    const next = addMinutes(current, court.duration)
-    if (next > close) break
-    const startStr = format(current, 'HH:mm')
+    const start = current
+    const next = addMinutes(start, durationMin)
+    const startStr = format(start, 'HH:mm')
     const endStr = format(next, 'HH:mm')
+    current = addMinutes(current, GRID_STEP)   // anda de 30 em 30
+    if (next > close) continue                 // não cabe → pula
     const isBooked = existingBookings
       .filter(b => b.status !== 'cancelado')
       .some(b => startStr < b.endTime && endStr > b.startTime)
-    slots.push({ time: startStr, available: !isBooked })
-    current = next
+    slots.push({ time: startStr, endTime: endStr, available: !isBooked })
   }
   return slots
 }
@@ -82,6 +85,7 @@ export default function NovoAgendamentoPage() {
   const [discount, setDiscount] = useState('')
   const [saving, setSaving] = useState(false)
   const [modality, setModality] = useState<Modality | ''>('')
+  const [duration, setDuration] = useState<number>(60)
 
   // Recorrência
   const [isRecurring, setIsRecurring] = useState(false)
@@ -97,21 +101,21 @@ export default function NovoAgendamentoPage() {
 
   const selectedCourt = courts.find(c => c.id === courtId)
   const dayBookings = bookings.filter(b => b.courtId === courtId)
-  const slots = selectedCourt ? generateTimeSlots(selectedCourt, dayBookings) : []
+  const slots = selectedCourt ? generateTimeSlots(selectedCourt, dayBookings, duration) : []
 
   // endTime para recorrente (1 slot)
   const endTime = selectedCourt && startTime
-    ? format(addMinutes(parse(startTime, 'HH:mm', new Date()), selectedCourt.duration), 'HH:mm')
+    ? format(addMinutes(parse(startTime, 'HH:mm', new Date()), duration), 'HH:mm')
     : ''
 
   // Valor de 1 slot no horário selecionado (modo recorrente); cai no openTime quando ainda sem horário
   const singleSlotDefault = selectedCourt
-    ? slotValueAt(selectedCourt, date, startTime || selectedCourt.openTime)
+    ? slotValueAt(selectedCourt, date, startTime || selectedCourt.openTime, duration)
     : 0
 
   // Soma do valor de cada slot selecionado individualmente (modo multi-slot)
   const slotsAutoTotal = selectedCourt && selectedSlots.length > 0
-    ? selectedSlots.reduce((sum, s) => sum + slotValueAt(selectedCourt, date, s), 0)
+    ? selectedSlots.reduce((sum, s) => sum + slotValueAt(selectedCourt, date, s, duration), 0)
     : 0
 
   // --- Cálculo de valor para modo não-recorrente multi-slot ---
@@ -134,6 +138,8 @@ export default function NovoAgendamentoPage() {
     setCustomValue('')
     const court = courts.find(c => c.id === id)
     if (court) {
+      // duração default = a da quadra (se for uma das opções); senão 1h
+      setDuration((BOOKING_DURATIONS as readonly number[]).includes(court.duration) ? court.duration : 60)
       // Auto-seleciona modalidade quando a quadra suporta apenas uma
       setModality(court.modalities.length === 1 ? court.modalities[0] : '')
     } else {
@@ -203,7 +209,7 @@ export default function NovoAgendamentoPage() {
 
         for (const slot of sortedSelected) {
           const slotEnd = format(
-            addMinutes(parse(slot, 'HH:mm', new Date()), selectedCourt!.duration),
+            addMinutes(parse(slot, 'HH:mm', new Date()), duration),
             'HH:mm'
           )
           const available = await checkAvailability(courtId, date, slot, slotEnd)
@@ -329,10 +335,27 @@ export default function NovoAgendamentoPage() {
 
             {selectedCourt && (
               <div>
+                <label className="block text-[13px] font-medium text-ink mb-2">Duração</label>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {BOOKING_DURATIONS.map(d => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => { setDuration(d); setStartTime(''); setSelectedSlots([]) }}
+                      className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-colors ${
+                        duration === d
+                          ? 'bg-brand text-white border-brand'
+                          : 'bg-surface text-ink border-line hover:border-brand/40'
+                      }`}
+                    >
+                      {durationLabel(d)}
+                    </button>
+                  ))}
+                </div>
                 <label className="block text-[13px] font-medium text-ink mb-2">
                   {isRecurring
-                    ? `Horário (${selectedCourt.duration} min por slot)`
-                    : `Horários (${selectedCourt.duration} min por slot — selecione um ou mais)`}
+                    ? `Horário (${durationLabel(duration)})`
+                    : `Horários (${durationLabel(duration)} — selecione um ou mais)`}
                 </label>
                 {slots.length === 0 ? (
                   <p className="text-sm text-muted">Sem horários nesta data</p>
@@ -342,12 +365,18 @@ export default function NovoAgendamentoPage() {
                       const isActiveRecurring = isRecurring && startTime === slot.time
                       const isActiveMulti = !isRecurring && selectedSlots.includes(slot.time)
                       const isActive = isActiveRecurring || isActiveMulti
+                      /* em modo multi, bloqueia horários que encavalam num já selecionado */
+                      const overlaps = !isRecurring && !isActiveMulti && selectedSlots.some(s => {
+                        const sEnd = format(addMinutes(parse(s, 'HH:mm', new Date()), duration), 'HH:mm')
+                        return slot.time < sEnd && slot.endTime > s
+                      })
+                      const blocked = !slot.available || overlaps
 
                       return (
                         <button
                           key={slot.time}
                           type="button"
-                          disabled={!slot.available}
+                          disabled={blocked}
                           onClick={() => {
                             if (isRecurring) {
                               setStartTime(slot.time)
@@ -358,14 +387,16 @@ export default function NovoAgendamentoPage() {
                           className={`px-3 py-2 rounded-[var(--radius-ctl)] text-sm font-medium border transition-colors ${
                             isActive
                               ? 'bg-primary text-white border-primary'
-                              : slot.available
+                              : !blocked
                               ? 'bg-surface text-ink border-line hover:border-brand hover:text-brand'
                               : 'bg-surface-2 text-subtle border-line cursor-not-allowed'
                           }`}
                         >
-                          {slot.available
+                          {!slot.available
+                            ? <span className="line-through">{slot.time}</span>
+                            : !blocked
                             ? <span className="flex items-center justify-center gap-1"><Clock size={12} />{slot.time}</span>
-                            : <span className="line-through">{slot.time}</span>
+                            : <span className="opacity-60">{slot.time}</span>
                           }
                         </button>
                       )
@@ -396,7 +427,7 @@ export default function NovoAgendamentoPage() {
                 </div>
                 <div className="flex flex-wrap gap-1">
                   {[...selectedSlots].sort().map(s => {
-                    const sEnd = format(addMinutes(parse(s, 'HH:mm', new Date()), selectedCourt.duration), 'HH:mm')
+                    const sEnd = format(addMinutes(parse(s, 'HH:mm', new Date()), duration), 'HH:mm')
                     return (
                       <span key={s} className="text-xs bg-surface border border-success/30 text-success px-2 py-0.5 rounded-full font-medium">
                         {s}–{sEnd}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, use } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Court, Modality, MODALITIES } from '@/types'
+import { Court, Modality, MODALITIES, BOOKING_DURATIONS, durationLabel } from '@/types'
 import { slotValueAt } from '@/lib/pricing'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -17,8 +17,11 @@ type Slot = { time: string; endTime: string; available: boolean }
 type BusySlot = { startTime: string; endTime: string }
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const GRID_STEP = 30  // grade de 30 em 30 min (menor duração possível)
 
-function generateSlots(court: Court, busy: BusySlot[], dateISO: string): Slot[] {
+/* Gera os horários de início (de 30 em 30) com intervalo = durationMin.
+   Cada slot vai de start até start+durationMin; some se não couber até o fechamento. */
+function generateSlots(court: Court, busy: BusySlot[], dateISO: string, durationMin: number): Slot[] {
   const slots: Slot[] = []
   let current = parse(court.openTime, 'HH:mm', new Date())
   const close = parse(court.closeTime, 'HH:mm', new Date())
@@ -29,12 +32,13 @@ function generateSlots(court: Court, busy: BusySlot[], dateISO: string): Slot[] 
   const nowStr  = format(now, 'HH:mm')
 
   while (current < close) {
-    const next = addMinutes(current, court.duration)
-    if (next > close) break
-    const startStr = format(current, 'HH:mm')
-    const endStr   = format(next,    'HH:mm')
-    current = next
-    if (isToday && startStr <= nowStr) continue   // horário passado → some
+    const start = current
+    const next  = addMinutes(start, durationMin)
+    const startStr = format(start, 'HH:mm')
+    const endStr   = format(next,  'HH:mm')
+    current = addMinutes(current, GRID_STEP)      // anda de 30 em 30
+    if (next > close) continue                    // não cabe até o fechamento → pula
+    if (isToday && startStr <= nowStr) continue    // horário passado → some
     const taken = busy.some(b => startStr < b.endTime && endStr > b.startTime)
     slots.push({ time: startStr, endTime: endStr, available: !taken })
   }
@@ -85,6 +89,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
   const [selectedCourt, setSelectedCourt]        = useState<Court | null>(null)
   const [selectedModality, setSelectedModality]  = useState<Modality | null>(null)
   const [selectedDate, setSelectedDate]          = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [duration, setDuration]                  = useState<number>(60)
   const [busySlots, setBusySlots]                = useState<BusySlot[]>([])
   const [loadingSlots, setLoadingSlots]          = useState(false)
   /* multi-slot: array de slots selecionados */
@@ -187,7 +192,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
 
   /* ─── valor total: soma slotValueAt de cada slot selecionado ─── */
   const totalValue = selectedCourt && selectedDate
-    ? selectedSlots.reduce((sum, s) => sum + slotValueAt(selectedCourt, selectedDate, s.time), 0)
+    ? selectedSlots.reduce((sum, s) => sum + slotValueAt(selectedCourt, selectedDate, s.time, duration), 0)
     : 0
 
   /* ─── confirmar reserva (multi-slot, aborta se qualquer conflito) ─── */
@@ -238,9 +243,9 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
         p_slots:        selectedSlots.map(s => ({
           start_time: s.time,
           end_time:   s.endTime,
-          value:      slotValueAt(selectedCourt, selectedDate, s.time),
+          value:      slotValueAt(selectedCourt, selectedDate, s.time, duration),
         })),
-        p_value:        slotValueAt(selectedCourt, selectedDate, selectedSlots[0].time),
+        p_value:        slotValueAt(selectedCourt, selectedDate, selectedSlots[0].time, duration),
         p_modality:     modality,
       })
       if (error) throw error
@@ -273,7 +278,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
     window.open(`https://wa.me/${withCountry}?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
-  const slots = selectedCourt ? generateSlots(selectedCourt, busySlots, selectedDate) : []
+  const slots = selectedCourt ? generateSlots(selectedCourt, busySlots, selectedDate, duration) : []
   const today  = format(new Date(), 'yyyy-MM-dd')
 
   /* ─── Arena não encontrada ─── */
@@ -295,7 +300,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
   if (success) {
     /* total dos slots confirmados (com preço por faixa) */
     const confirmedTotal = selectedCourt
-      ? confirmedSlots.reduce((sum, s) => sum + slotValueAt(selectedCourt, selectedDate, s.time), 0)
+      ? confirmedSlots.reduce((sum, s) => sum + slotValueAt(selectedCourt, selectedDate, s.time, duration), 0)
       : 0
 
     return (
@@ -345,7 +350,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
                   <span className="text-subtle text-xs">{slot.time} – {slot.endTime}</span>
                   <span className="text-xs font-medium text-brand">
                     R$ {selectedCourt
-                      ? slotValueAt(selectedCourt, selectedDate, slot.time).toFixed(2)
+                      ? slotValueAt(selectedCourt, selectedDate, slot.time, duration).toFixed(2)
                       : '—'}
                   </span>
                 </div>
@@ -441,6 +446,8 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
                     onClick={() => {
                       setSelectedCourt(court)
                       setSelectedSlots([])
+                      /* duração default = a da quadra (se for uma das opções); senão 1h */
+                      setDuration((BOOKING_DURATIONS as readonly number[]).includes(court.duration) ? court.duration : 60)
                       /* auto-seleciona quando há apenas uma modalidade */
                       setSelectedModality(court.modalities.length === 1 ? court.modalities[0] : null)
                     }}
@@ -526,11 +533,30 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
             }} />
             <h2 className="text-xs font-semibold text-ink tracking-widest mb-4 flex items-center gap-2 uppercase">
               <StepBadge n={3} />
-              Escolha os horários
-              <span className="ml-auto text-[10px] text-muted font-normal normal-case tracking-normal">
-                {selectedCourt.duration} min por sessão
-              </span>
+              Duração e horário
             </h2>
+
+            {/* Seletor de duração */}
+            <div className="mb-4">
+              <p className="text-xs text-muted mb-2 font-medium">Quanto tempo vai jogar?</p>
+              <div className="flex flex-wrap gap-2">
+                {BOOKING_DURATIONS.map(d => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => { setDuration(d); setSelectedSlots([]) }}
+                    className={[
+                      'px-4 py-1.5 rounded-full text-sm font-semibold transition-all border',
+                      duration === d
+                        ? 'bg-brand text-white border-brand'
+                        : 'bg-surface border-line text-ink hover:border-brand/40',
+                    ].join(' ')}
+                  >
+                    {durationLabel(d)}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {loadingSlots ? (
               <div className="flex justify-center py-8">
@@ -544,27 +570,30 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {slots.map(slot => {
                   const isSelected = selectedSlots.some(s => s.time === slot.time)
+                  /* bloqueia horários que encavalam num que você já selecionou */
+                  const overlaps = !isSelected && selectedSlots.some(s => slot.time < s.endTime && slot.endTime > s.time)
+                  const blocked = !slot.available || overlaps
                   return (
                     <button
                       key={slot.time}
-                      disabled={!slot.available}
+                      disabled={blocked}
                       onClick={() => toggleSlot(slot)}
                       className={[
                         'px-2 py-3 rounded-[var(--radius-ctl)] text-sm font-semibold transition-all flex flex-col items-center gap-0.5 disabled:cursor-not-allowed',
                         isSelected
                           ? 'bg-primary text-white border-[1.5px] border-primary'
-                          : slot.available
+                          : !blocked
                           ? 'border border-line hover:border-brand hover:text-brand text-ink'
                           : 'bg-surface-2 text-subtle border border-line',
                       ].join(' ')}
                     >
-                      {slot.available && !isSelected && (
+                      {!blocked && !isSelected && (
                         <Clock size={10} className="text-brand" />
                       )}
-                      <span className={slot.available ? '' : 'line-through'}>{slot.time}</span>
-                      {!slot.available && (
-                        <span className="text-[9px] font-medium leading-none">reservado</span>
-                      )}
+                      <span className={!slot.available ? 'line-through' : ''}>{slot.time}</span>
+                      <span className={['text-[9px] leading-none', isSelected ? 'text-white/80' : 'text-subtle'].join(' ')}>
+                        {!slot.available ? 'reservado' : `até ${slot.endTime}`}
+                      </span>
                     </button>
                   )
                 })}
@@ -627,7 +656,7 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
                         <span className="text-ink">{slot.time} – {slot.endTime}</span>
                         <span className="text-muted">
                           R$ {selectedCourt
-                            ? slotValueAt(selectedCourt, selectedDate, slot.time).toFixed(2)
+                            ? slotValueAt(selectedCourt, selectedDate, slot.time, duration).toFixed(2)
                             : '—'}
                         </span>
                       </div>

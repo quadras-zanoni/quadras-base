@@ -21,9 +21,11 @@ export function hourlyPriceAt(court: Court, dateISO: string, startTime: string):
   return court.pricePerHour
 }
 
-/** Valor de UM slot (uma sessão = duração da quadra) no horário dado. */
-export function slotValueAt(court: Court, dateISO: string, startTime: string): number {
-  return hourlyPriceAt(court, dateISO, startTime) * (court.duration / 60)
+/** Valor de UM slot no horário dado. `durationMin` em minutos — quando omitido,
+ *  usa a duração padrão da quadra (retrocompat). Preço é proporcional à hora. */
+export function slotValueAt(court: Court, dateISO: string, startTime: string, durationMin?: number): number {
+  const dur = durationMin ?? court.duration
+  return hourlyPriceAt(court, dateISO, startTime) * (dur / 60)
 }
 
 /** Menor preço/hora da quadra (base + faixas) — útil pra exibir "a partir de R$X". */
