@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -116,13 +115,6 @@ export default function LoginPage() {
             </form>
           )}
         </div>
-
-        <p className="text-center text-sm text-muted mt-6 tracking-wide">
-          Não tem conta?{' '}
-          <Link href="/cadastro" className="font-semibold text-brand hover:opacity-80 transition-opacity">
-            Criar conta
-          </Link>
-        </p>
       </div>
     </div>
   )
