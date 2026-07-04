@@ -28,7 +28,7 @@ const paymentBadge: Record<Sale['paymentMethod'], { label: string; color: 'green
 }
 
 export default function VendasPage() {
-  const { sales, loading, registerSale, todaySales, todayRevenue } = useSales()
+  const { sales, loading, registerSale, deleteSale, todaySales, todayRevenue } = useSales()
   const { products } = useProducts()
   const { clients } = useClients()
 
@@ -101,6 +101,16 @@ export default function VendasPage() {
     }
   }
 
+  async function handleDelete(sale: Sale) {
+    if (!confirm(`Apagar esta venda de ${fmt(sale.total)}? O estoque dos produtos volta.`)) return
+    try {
+      await deleteSale(sale.id)
+      toast.success('Venda apagada — estoque devolvido')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Erro ao apagar venda')
+    }
+  }
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -149,7 +159,17 @@ export default function VendasPage() {
                       </span>
                     )}
                   </div>
-                  <span className="font-bold text-success text-lg">{fmt(sale.total)}</span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className="font-bold text-success text-lg">{fmt(sale.total)}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(sale)}
+                      title="Apagar venda"
+                      className="text-muted hover:text-danger transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
                 <div className="space-y-1">
                   {sale.items.map(item => (

@@ -268,13 +268,24 @@ export function ComandaDetail({
             ))}
           </Select>
           <div className="flex gap-3">
+            <Button variant="secondary" onClick={onExit} className="flex-1">
+              Salvar e voltar
+            </Button>
             <Button variant="primary" onClick={handleClose} loading={busy} className="flex-1" disabled={c.items.length === 0}>
               <Wallet size={16} /> Fechar {fmt(c.total)}
             </Button>
-            <Button variant="danger" onClick={handleCancel} disabled={busy}>
-              Cancelar comanda
-            </Button>
           </div>
+          <p className="text-[11px] text-subtle text-center -mt-1">
+            "Salvar e voltar" deixa a comanda aberta pra continuar depois. "Fechar" registra o pagamento.
+          </p>
+          <button
+            type="button"
+            onClick={handleCancel}
+            disabled={busy}
+            className="w-full text-center text-sm text-danger hover:underline disabled:opacity-40"
+          >
+            Cancelar comanda (devolve o estoque)
+          </button>
         </div>
       </div>
     </Modal>

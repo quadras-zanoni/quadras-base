@@ -62,6 +62,13 @@ export function useSales() {
     await load()
   }
 
+  // Apaga uma venda e devolve o estoque dos produtos (RPC delete_sale).
+  async function deleteSale(id: string) {
+    const { error } = await supabase.rpc('delete_sale', { p_sale_id: id })
+    if (error) throw error
+    await load()
+  }
+
   const today = format(new Date(), 'yyyy-MM-dd')
   const todaySales = sales.filter(s => {
     if (!s.createdAt) return false
@@ -70,5 +77,5 @@ export function useSales() {
 
   const todayRevenue = todaySales.reduce((sum, s) => sum + s.total, 0)
 
-  return { sales, loading, registerSale, todaySales, todayRevenue }
+  return { sales, loading, registerSale, deleteSale, todaySales, todayRevenue }
 }
