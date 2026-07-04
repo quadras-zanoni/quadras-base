@@ -111,6 +111,12 @@ export interface Sale {
   paymentMethod: 'dinheiro' | 'pix' | 'cartao_debito' | 'cartao_credito' | 'outro'
   notes?: string
   createdAt: string
+  // Comanda (venda em aberto) — campos opcionais, retrocompatível.
+  // A linha do "horário" é um SaleItem com productId '' e productName 'Horário'.
+  status?: 'aberta' | 'fechada' | 'cancelada'
+  bookingId?: string
+  openedAt?: string
+  closedAt?: string
 }
 
 export const PAYMENT_METHODS: Record<Sale['paymentMethod'], string> = {

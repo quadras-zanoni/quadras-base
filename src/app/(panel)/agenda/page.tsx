@@ -9,7 +9,7 @@ import { Input, Select, Textarea } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { format, addMinutes, parse } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Phone, MessageSquare, X, CheckCircle, Edit, MessageCircle, Clock, LayoutGrid, List } from 'lucide-react'
+import { Phone, MessageSquare, X, CheckCircle, Edit, MessageCircle, Clock, LayoutGrid, List, Receipt } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { Booking, Court, Modality, MODALITIES } from '@/types'
@@ -22,6 +22,14 @@ function openWhatsApp(phone: string, message: string) {
   const cleaned = phone.replace(/\D/g, '')
   const withCountry = cleaned.startsWith('55') ? cleaned : `55${cleaned}`
   window.open(`https://wa.me/${withCountry}?text=${encodeURIComponent(message)}`, '_blank')
+}
+
+// Abre a tela de Comandas já criando uma comanda para esta reserva
+// (cliente + booking + valor do horário via query string).
+function comandaHref(b: Booking) {
+  const params = new URLSearchParams({ bookingId: b.id, clientName: b.clientName, horario: String(b.value) })
+  if (b.clientId) params.set('clientId', b.clientId)
+  return `/comandas?${params.toString()}`
 }
 
 function buildWhatsAppMessage(booking: Booking, status: 'confirmado' | 'cancelado') {
@@ -247,6 +255,11 @@ export default function AgendaPage() {
 
                         {b.status !== 'cancelado' && (
                           <>
+                            <Link href={comandaHref(b)}>
+                              <Button size="sm" variant="secondary">
+                                <Receipt size={14} /> Comanda
+                              </Button>
+                            </Link>
                             {b.status === 'pendente' && (
                               <Button size="sm" variant="primary" onClick={() => handleConfirm(b)}>
                                 <CheckCircle size={14} /> Confirmar

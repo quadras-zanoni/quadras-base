@@ -29,6 +29,10 @@ export function useSales() {
       .from('sales')
       .select('*')
       .eq('owner_id', user.id)
+      // Comandas abertas não são vendas ainda; canceladas não entram no faturamento.
+      // Sobram: vendas normais + comandas fechadas (todas com status 'fechada').
+      .neq('status', 'aberta')
+      .neq('status', 'cancelada')
       .order('created_at', { ascending: false })
     if (error) console.error('[useSales] load:', error)
     setSales((data || []).map(mapSale))

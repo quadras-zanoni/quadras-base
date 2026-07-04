@@ -7,7 +7,7 @@ import { usePendingCount } from '@/hooks/usePendingCount'
 import {
   LayoutDashboard, Calendar, CalendarPlus, Flag, Users,
   Package, ArrowLeftRight, ShoppingCart, LogOut, Menu, X,
-  Link2, BarChart2,
+  Link2, BarChart2, Receipt,
 } from 'lucide-react'
 import { useState } from 'react'
 import { clsx } from 'clsx'
@@ -20,6 +20,7 @@ const navItems = [
   { href: '/clientes',          label: 'Clientes',         icon: Users },
   { href: '/estoque',           label: 'Estoque',          icon: Package },
   { href: '/movimentacoes',     label: 'Movimentações',    icon: ArrowLeftRight },
+  { href: '/comandas',          label: 'Comandas',         icon: Receipt },
   { href: '/vendas',            label: 'Vendas',           icon: ShoppingCart },
   { href: '/relatorio',         label: 'Relatório',        icon: BarChart2 },
   { href: '/link-cliente',      label: 'Link do Cliente',  icon: Link2 },

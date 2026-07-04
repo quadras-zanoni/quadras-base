@@ -61,6 +61,9 @@ export default function RelatorioPage() {
         .from('sales')
         .select('*')
         .eq('owner_id', user!.id)
+        // só vendas efetivadas: exclui comandas abertas e canceladas
+        .neq('status', 'aberta')
+        .neq('status', 'cancelada')
         .gte('created_at', monthStart + 'T00:00:00')
         .lte('created_at', monthEnd + 'T23:59:59')
       setSales((sData || []).map(row => ({
