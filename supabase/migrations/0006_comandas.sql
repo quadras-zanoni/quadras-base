@@ -16,6 +16,8 @@ alter table sales add column if not exists status text not null default 'fechada
 alter table sales add column if not exists booking_id uuid;
 alter table sales add column if not exists opened_at timestamptz;
 alter table sales add column if not exists closed_at timestamptz;
+-- sales não tinha updated_at (as RPCs/hook da comanda o atualizam).
+alter table sales add column if not exists updated_at timestamptz default now();
 
 -- Comanda aberta ainda não tem forma de pagamento definida.
 alter table sales alter column payment_method drop not null;
