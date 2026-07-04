@@ -10,6 +10,8 @@ import { format, addMinutes, parse } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Clock, CheckCircle, Calendar, Zap, ChevronLeft, MessageCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { BrandMark } from '@/components/BrandMark'
+import { BRAND } from '@/lib/brand'
 
 /* ─── tipos locais ─── */
 type Slot = { time: string; endTime: string; available: boolean }
@@ -62,19 +64,6 @@ function BackButton({ onClick }: { onClick: () => void }) {
       <ChevronLeft size={14} />
       voltar
     </button>
-  )
-}
-
-/* ─── BrandMark (igual ao Sidebar) ─── */
-function BrandMark() {
-  return (
-    <div className="w-10 h-10 rounded-[10px] bg-brand flex items-center justify-center shrink-0">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <rect x="3" y="5" width="18" height="14" rx="2" stroke="white" strokeWidth="2" />
-        <path d="M12 5v14" stroke="white" strokeWidth="2" />
-        <circle cx="12" cy="12" r="1.6" fill="white" />
-      </svg>
-    </div>
   )
 }
 
@@ -409,10 +398,9 @@ export default function ReservarPage({ params }: { params: Promise<{ ownerId: st
       {/* Header */}
       <header className="sticky top-0 z-10 bg-surface border-b border-line">
         <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-arena-branca.png" alt="Arena do Parque" className="h-12 w-auto shrink-0" />
+          <BrandMark className="h-12 w-auto shrink-0" textClassName="text-lg font-bold text-brand tracking-tight" />
           <div>
-            <h1 className="font-bold text-sm tracking-tight text-ink">Arena do Parque</h1>
+            <h1 className="font-bold text-sm tracking-tight text-ink">{BRAND.name}</h1>
             <p className="text-[11px] text-muted">Reserve sua quadra de beach tennis</p>
           </div>
         </div>

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { Toaster } from 'react-hot-toast'
+import { BRAND, brandDescription } from '@/lib/brand'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -12,13 +13,24 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: 'Arena do Parque',
-  description: 'Arena do Parque — agende sua quadra de beach tennis',
+  title: BRAND.name,
+  description: brandDescription,
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // Paleta da marca por deploy: se NEXT_PUBLIC_BRAND_COLOR estiver setada, sobrescreve as
+  // CSS vars via inline style (tom-fraco e hover derivados com color-mix). Sem env = default.
+  const brandVars = BRAND.brandColor
+    ? ({
+        '--color-brand': BRAND.brandColor,
+        '--color-brand-weak': `color-mix(in srgb, ${BRAND.brandColor} 14%, #ffffff)`,
+        '--color-primary': BRAND.brandPrimary || BRAND.brandColor,
+        '--color-primary-hover': `color-mix(in srgb, ${BRAND.brandPrimary || BRAND.brandColor} 82%, #000000)`,
+      } as React.CSSProperties)
+    : undefined
+
   return (
-    <html lang="pt-BR" className={inter.variable}>
+    <html lang="pt-BR" data-theme={BRAND.theme} style={brandVars} className={inter.variable}>
       <body>
         <AuthProvider>
           {children}

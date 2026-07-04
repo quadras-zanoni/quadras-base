@@ -54,6 +54,14 @@
   --color-brand-weak: rgba(20, 184, 166, 0.12);
 }
 
+/* ── White-label: paletas por arena (data-theme no <html> via NEXT_PUBLIC_ARENA_THEME) ── */
+html[data-theme="life-beach"] {
+  --color-brand: #1e56b0;        /* azul Life Beach */
+  --color-brand-weak: #dbe7fb;   /* fundo do item ativo */
+  --color-primary: #1a4a97;      /* azul escuro — ação */
+  --color-primary-hover: #143a78;
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 
 html { scroll-behavior: smooth; }

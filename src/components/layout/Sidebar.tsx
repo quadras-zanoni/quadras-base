@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { clsx } from 'clsx'
+import { BrandMark } from '@/components/BrandMark'
 
 const navItems = [
   { href: '/dashboard',         label: 'Dashboard',        icon: LayoutDashboard },
@@ -90,7 +91,7 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
       {/* Brand */}
       <div className="px-4 mb-6 flex justify-center">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-arena-branca.png" alt="Arena do Parque" className="h-20 w-auto" />
+        <BrandMark className="h-20 w-auto" textClassName="text-2xl font-bold text-brand tracking-tight" />
       </div>
 
       {/* Navigation */}
@@ -125,7 +126,7 @@ export function Sidebar() {
       <header className="lg:hidden fixed top-0 inset-x-0 z-40 flex items-center justify-between px-4 py-3 bg-surface border-b border-line">
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-arena-branca.png" alt="Arena do Parque" className="h-7 w-7 object-contain shrink-0" />
+          <BrandMark className="h-7 w-7 object-contain shrink-0" compact />
           <span className="font-bold text-ink text-sm tracking-tight">ARENA DO PARQUE</span>
         </div>
         <button

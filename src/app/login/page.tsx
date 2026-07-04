@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { BrandMark } from '@/components/BrandMark'
 import toast from 'react-hot-toast'
 
 export default function LoginPage() {
@@ -53,8 +54,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-arena-branca.png" alt="Arena do Parque" className="h-32 w-auto" />
+          <BrandMark className="h-32 w-auto" textClassName="text-3xl font-bold text-brand tracking-tight text-center" />
         </div>
 
         {/* Card */}

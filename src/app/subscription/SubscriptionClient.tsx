@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Card } from '@/components/ui/Card'
+import { BrandMark } from '@/components/BrandMark'
 
 interface Props {
   billingHubUrl: string
@@ -93,7 +94,7 @@ export default function SubscriptionClient({
         {/* Logo + marca */}
         <div className="flex flex-col items-center gap-3 mb-8">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-arena-branca.png" alt="Arena do Parque" className="h-28 w-auto" />
+          <BrandMark className="h-28 w-auto" textClassName="text-2xl font-bold text-brand tracking-tight" />
         </div>
 
         {/* Badge de aviso */}
