@@ -4,6 +4,7 @@ import { cookies } from 'next/headers'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { BrandProvider } from '@/contexts/BrandContext'
+import { DemoRibbon } from '@/components/DemoRibbon'
 import { Toaster } from 'react-hot-toast'
 import { BRAND, brandDescription, type Brand } from '@/lib/brand'
 
@@ -80,6 +81,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               }}
             />
           </AuthProvider>
+          {process.env.DEMO_MODE === '1' && <DemoRibbon />}
         </BrandProvider>
       </body>
     </html>

@@ -9,6 +9,7 @@ const BYPASS_PATHS = [
   '/login',
   '/cadastro',
   '/reservar',
+  '/demo',
   '/api/',
   '/_next/',
   '/favicon',
