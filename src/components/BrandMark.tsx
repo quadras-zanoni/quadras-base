@@ -1,7 +1,10 @@
-import { BRAND } from '@/lib/brand'
+'use client'
+
+import { useBrand } from '@/contexts/BrandContext'
 
 /**
- * Marca da arena (logo ou wordmark). Lê a config de `BRAND` (env por deploy).
+ * Marca da arena (logo ou wordmark). Lê a marca de `useBrand()` — que é o BRAND do
+ * deploy (env) por padrão, ou a marca do prospect no modo demo.
  * - Com logo configurado → renderiza a imagem (className controla o tamanho).
  * - Sem logo ("none") → wordmark com o nome; `compact` mostra as iniciais (sidebar recolhida).
  */
@@ -14,13 +17,15 @@ export function BrandMark({
   textClassName?: string
   compact?: boolean
 }) {
-  if (BRAND.logo) {
+  const brand = useBrand()
+
+  if (brand.logo) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={BRAND.logo} alt={BRAND.name} className={className} />
+    return <img src={brand.logo} alt={brand.name} className={className} />
   }
 
   if (compact) {
-    const initials = BRAND.name
+    const initials = brand.name
       .split(' ')
       .slice(0, 2)
       .map(w => w[0])
@@ -33,5 +38,5 @@ export function BrandMark({
     )
   }
 
-  return <span className={textClassName}>{BRAND.name}</span>
+  return <span className={textClassName}>{brand.name}</span>
 }

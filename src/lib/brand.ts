@@ -8,7 +8,15 @@
 
 const rawLogo = process.env.NEXT_PUBLIC_ARENA_LOGO
 
-export const BRAND = {
+export type Brand = {
+  name: string
+  logo: string | null
+  theme: string
+  brandColor: string | null
+  brandPrimary: string | null
+}
+
+export const BRAND: Brand = {
   name: process.env.NEXT_PUBLIC_ARENA_NAME || 'Arena do Parque',
   // "none" → null (usa wordmark); vazio/ausente → logo padrão da Arena do Parque
   logo: rawLogo === 'none' ? null : (rawLogo || '/logo-arena-branca.png'),
@@ -17,6 +25,6 @@ export const BRAND = {
   // (deriva tom-fraco e hover com color-mix). Ausente → paleta default (Arena do Parque).
   brandColor: process.env.NEXT_PUBLIC_BRAND_COLOR || null,
   brandPrimary: process.env.NEXT_PUBLIC_BRAND_PRIMARY || null,
-} as const
+}
 
 export const brandDescription = `${BRAND.name} — agende sua quadra de beach tennis`
