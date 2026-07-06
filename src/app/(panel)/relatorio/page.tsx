@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/contexts/AuthContext'
+import { useProducts } from '@/hooks/useProducts'
 import { Booking, Sale, PAYMENT_METHODS } from '@/types'
 import { StatCard } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -25,6 +26,17 @@ export default function RelatorioPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [sales, setSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(true)
+
+  const { products } = useProducts()
+
+  // Mapa de productId -> costPrice para calcular custo dos produtos vendidos
+  const costPriceMap = useMemo(() => {
+    const map = new Map<string, number>()
+    for (const p of products) {
+      if (p.costPrice > 0) map.set(p.id, p.costPrice)
+    }
+    return map
+  }, [products])
 
   const monthStart = format(startOfMonth(currentMonth), 'yyyy-MM-dd')
   const monthEnd = format(endOfMonth(currentMonth), 'yyyy-MM-dd')
@@ -97,6 +109,18 @@ export default function RelatorioPage() {
   const salesRevenue = sales.reduce((s, v) => s + v.total, 0)
   const totalRevenue = bookingRevenue + salesRevenue
 
+  // Custo e lucro dos produtos (comanda/bar)
+  const custoProdutos = sales.reduce((acc, sale) => {
+    for (const item of sale.items) {
+      if (!item.productId) continue
+      const cost = costPriceMap.get(item.productId)
+      if (cost !== undefined) acc += item.quantity * cost
+    }
+    return acc
+  }, 0)
+  const lucroProdutos = salesRevenue - custoProdutos
+  const margemPct = salesRevenue > 0 ? (lucroProdutos / salesRevenue) * 100 : 0
+
   // Receita por quadra
   const byCourt: Record<string, { name: string; count: number; revenue: number }> = {}
   for (const b of activeBookings) {
@@ -157,7 +181,7 @@ export default function RelatorioPage() {
       ) : (
         <div className="space-y-5">
           {/* Cards de resumo */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             <StatCard
               title="Receita total"
               value={fmt(totalRevenue)}
@@ -180,6 +204,13 @@ export default function RelatorioPage() {
               subtitle={`${sales.length} vendas`}
             />
             <StatCard
+              title="Lucro produtos"
+              value={fmt(lucroProdutos)}
+              icon={<TrendingUp size={20} />}
+              color="green"
+              subtitle={`margem ${margemPct.toFixed(0)}%`}
+            />
+            <StatCard
               title="Cancelamentos"
               value={cancelledBookings.length}
               icon={<DollarSign size={20} />}
@@ -187,6 +218,13 @@ export default function RelatorioPage() {
               subtitle={`de ${bookings.length} agendamentos`}
             />
           </div>
+
+          {salesRevenue > 0 && custoProdutos === 0 && (
+            <div className="flex items-center gap-2 text-xs text-muted bg-surface-2 border border-line rounded-lg px-4 py-2">
+              <span>💡</span>
+              <span>Cadastre o preço de custo dos produtos no Estoque pra ver o lucro real.</span>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             {/* Receita por quadra */}
@@ -239,6 +277,14 @@ export default function RelatorioPage() {
                   <div className="border-t border-line pt-3 flex justify-between">
                     <span className="text-sm font-medium text-muted">Total vendas</span>
                     <span className="font-bold text-brand">{fmt(salesRevenue)}</span>
+                  </div>
+                  <div className="flex justify-between pt-1.5">
+                    <span className="text-sm text-muted">Custo dos produtos</span>
+                    <span className="text-sm text-muted">{fmt(custoProdutos)}</span>
+                  </div>
+                  <div className="flex justify-between pt-1.5">
+                    <span className="text-sm font-bold text-success">Lucro</span>
+                    <span className="text-sm font-bold text-success">{fmt(lucroProdutos)}</span>
                   </div>
                 </div>
               )}
