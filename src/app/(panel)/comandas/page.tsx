@@ -6,7 +6,7 @@ import { useProducts } from '@/hooks/useProducts'
 import { useClients } from '@/hooks/useClients'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
-import { Input, Select } from '@/components/ui/Input'
+import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { ComandaDetail } from './ComandaDetail'
 import { Receipt, Plus, User, Clock } from 'lucide-react'
@@ -34,6 +34,7 @@ export default function ComandasPage() {
   const [clientId, setClientId] = useState('')
   const [avulsoName, setAvulsoName] = useState('')
   const [creating, setCreating] = useState(false)
+  const [clientSearch, setClientSearch] = useState('')
 
   const selected = comandas.find(c => c.id === selectedId) ?? null
 
@@ -79,6 +80,7 @@ export default function ComandasPage() {
       setOpenModal(false)
       setClientId('')
       setAvulsoName('')
+      setClientSearch('')
     } catch {
       toast.error('Erro ao abrir comanda')
     } finally {
@@ -96,7 +98,7 @@ export default function ComandasPage() {
             {comandas.length} aberta{comandas.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <Button variant="primary" size="md" onClick={() => { setMode('cadastrado'); setOpenModal(true) }}>
+        <Button variant="primary" size="md" onClick={() => { setMode('cadastrado'); setClientSearch(''); setOpenModal(true) }}>
           <Plus size={16} /> Abrir comanda
         </Button>
       </div>
@@ -112,7 +114,7 @@ export default function ComandasPage() {
           </div>
           <p className="text-base font-medium text-ink mb-1">Nenhuma comanda aberta</p>
           <p className="text-sm text-muted mb-4">Abra uma comanda para começar a lançar consumo.</p>
-          <Button variant="primary" size="md" onClick={() => { setMode('cadastrado'); setOpenModal(true) }}>
+          <Button variant="primary" size="md" onClick={() => { setMode('cadastrado'); setClientSearch(''); setOpenModal(true) }}>
             Abrir comanda
           </Button>
         </div>
@@ -167,7 +169,7 @@ export default function ComandasPage() {
       )}
 
       {/* Abrir comanda */}
-      <Modal open={openModal} onClose={() => setOpenModal(false)} title="Abrir comanda">
+      <Modal open={openModal} onClose={() => { setOpenModal(false); setClientSearch('') }} title="Abrir comanda">
         <div className="space-y-5">
           {/* Toggle cadastrado / avulso */}
           <div className="flex items-center gap-1 bg-surface-2 rounded-[var(--radius-ctl)] p-1">
@@ -175,7 +177,7 @@ export default function ComandasPage() {
               <button
                 key={m}
                 type="button"
-                onClick={() => setMode(m)}
+                onClick={() => { setMode(m); setClientSearch('') }}
                 className={clsx(
                   'flex-1 px-3 py-1.5 rounded-[var(--radius-ctl)] text-sm font-medium transition-colors',
                   mode === m ? 'bg-surface shadow-sm text-ink' : 'text-muted hover:text-ink'
@@ -187,12 +189,50 @@ export default function ComandasPage() {
           </div>
 
           {mode === 'cadastrado' ? (
-            <Select label="Cliente" value={clientId} onChange={e => setClientId(e.target.value)}>
-              <option value="">Selecione…</option>
-              {clients.map(c => (
-                <option key={c.id} value={c.id}>{c.name} – {c.phone}</option>
-              ))}
-            </Select>
+            (() => {
+              const selectedClient = clients.find(c => c.id === clientId)
+              if (selectedClient) {
+                return (
+                  <div className="bg-surface-2 rounded-[var(--radius-ctl)] px-3 py-2 flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="font-medium text-ink truncate">{selectedClient.name}</p>
+                      <p className="text-xs text-muted">{selectedClient.phone}</p>
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={() => setClientId('')}>Trocar</Button>
+                  </div>
+                )
+              }
+              const filtered = clients
+                .filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()) || c.phone.includes(clientSearch))
+                .slice(0, 8)
+              return (
+                <div className="space-y-2">
+                  <Input
+                    label="Cliente"
+                    placeholder="Buscar por nome ou telefone…"
+                    value={clientSearch}
+                    onChange={e => setClientSearch(e.target.value)}
+                  />
+                  {filtered.length === 0 ? (
+                    <p className="text-sm text-muted text-center py-3">Nenhum cliente encontrado</p>
+                  ) : (
+                    <div className="border border-line rounded-[var(--radius-ctl)] divide-y divide-line max-h-52 overflow-y-auto">
+                      {filtered.map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => { setClientId(c.id); setClientSearch('') }}
+                          className="w-full text-left px-3 py-2 hover:bg-surface-2 flex flex-col"
+                        >
+                          <span className="text-sm font-medium text-ink">{c.name}</span>
+                          <span className="text-xs text-muted">{c.phone}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })()
           ) : (
             <Input
               label="Nome (avulso)"
