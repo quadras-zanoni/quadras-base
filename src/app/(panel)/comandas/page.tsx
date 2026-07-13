@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { ComandaDetail } from './ComandaDetail'
-import { Receipt, Plus, User, Clock } from 'lucide-react'
+import { Receipt, Plus, User, Clock, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -37,6 +37,17 @@ export default function ComandasPage() {
   const [clientSearch, setClientSearch] = useState('')
 
   const selected = comandas.find(c => c.id === selectedId) ?? null
+
+  // Comandas com a lista de itens expandida no card (espiar sem abrir a comanda).
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  function toggleExpand(id: string) {
+    setExpandedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   // Atalho vindo da agenda: ?bookingId=&clientId=&clientName=&horario=
   const didInit = useRef(false)
@@ -122,32 +133,79 @@ export default function ComandasPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {comandas.map(c => {
             const opened = c.openedAt || c.createdAt
+            const expanded = expandedIds.has(c.id)
+            const hasItems = c.items.length > 0
             return (
-              <button
+              <div
                 key={c.id}
-                type="button"
-                onClick={() => setSelectedId(c.id)}
-                className="text-left bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-4 hover:border-brand transition-colors"
+                className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-4 hover:border-brand transition-colors"
               >
-                <div className="flex items-center gap-2 mb-3">
+                {/* Nome — abre a comanda */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(c.id)}
+                  className="w-full text-left flex items-center gap-2 mb-3"
+                >
                   <span className="w-8 h-8 rounded-full bg-brand-weak text-brand flex items-center justify-center shrink-0">
                     <User size={15} />
                   </span>
                   <span className="font-semibold text-ink truncate">{c.clientName || 'Avulsa'}</span>
-                </div>
+                </button>
+
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted">
+                  {/* Itens — toque expande a lista aqui mesmo, sem abrir a comanda */}
+                  <button
+                    type="button"
+                    onClick={() => toggleExpand(c.id)}
+                    disabled={!hasItems}
+                    aria-expanded={expanded}
+                    className="flex items-center gap-1 text-xs text-muted hover:text-ink transition-colors disabled:hover:text-muted disabled:opacity-60"
+                  >
                     {c.items.length} {c.items.length === 1 ? 'item' : 'itens'}
-                  </span>
-                  <span className="font-bold text-success text-lg">{fmt(c.total)}</span>
+                    {hasItems && (
+                      <ChevronDown
+                        size={13}
+                        className={clsx('transition-transform', expanded && 'rotate-180')}
+                      />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(c.id)}
+                    className="font-bold text-success text-lg hover:opacity-80 transition-opacity"
+                  >
+                    {fmt(c.total)}
+                  </button>
                 </div>
+
+                {/* Lista de itens (só espiar) */}
+                {expanded && hasItems && (
+                  <ul className="mt-3 pt-3 border-t border-line space-y-1.5">
+                    {c.items.map(item => (
+                      <li
+                        key={item.productId || 'horario'}
+                        className="flex items-center justify-between gap-2 text-xs"
+                      >
+                        <span className="text-ink truncate">
+                          {item.quantity}x {item.productName}
+                        </span>
+                        <span className="text-muted shrink-0 tabular-nums">{fmt(item.total)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
                 {opened && (
-                  <p className="flex items-center gap-1 text-[11px] text-subtle mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(c.id)}
+                    className="w-full text-left flex items-center gap-1 text-[11px] text-subtle mt-2"
+                  >
                     <Clock size={11} />
                     aberta {formatDistanceToNow(new Date(opened), { locale: ptBR, addSuffix: true })}
-                  </p>
+                  </button>
                 )}
-              </button>
+              </div>
             )
           })}
         </div>
