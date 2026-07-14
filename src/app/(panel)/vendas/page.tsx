@@ -5,7 +5,7 @@ import { useSales } from '@/hooks/useSales'
 import { useProducts } from '@/hooks/useProducts'
 import { useClients } from '@/hooks/useClients'
 import { Button } from '@/components/ui/Button'
-import { Select, Textarea } from '@/components/ui/Input'
+import { Input, Select, Textarea } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { Badge } from '@/components/ui/Badge'
 import { SaleItem, Sale, Product, PAYMENT_METHODS } from '@/types'
@@ -38,6 +38,8 @@ export default function VendasPage() {
   const [paymentMethod, setPaymentMethod] = useState<Sale['paymentMethod']>('pix')
   const [saving, setSaving] = useState(false)
   const [selectedClientId, setSelectedClientId] = useState('')
+  const [desconto, setDesconto] = useState(0)
+  const [produtoBusca, setProdutoBusca] = useState('')
 
   const activeProducts = products.filter(p => p.status === 'ativo')
   const total = items.reduce((sum, i) => sum + i.total, 0)
@@ -48,6 +50,7 @@ export default function VendasPage() {
     setNotes('')
     setPaymentMethod('pix')
     setSelectedClientId('')
+    setDesconto(0)
     setModal(true)
   }
 
@@ -90,7 +93,8 @@ export default function VendasPage() {
         paymentMethod,
         notes,
         selectedClientId || undefined,
-        selectedClient?.name || undefined
+        selectedClient?.name || undefined,
+        desconto
       )
       toast.success('Venda registrada!')
       setModal(false)
@@ -102,7 +106,8 @@ export default function VendasPage() {
   }
 
   async function handleDelete(sale: Sale) {
-    if (!confirm(`Apagar esta venda de ${fmt(sale.total)}? O estoque dos produtos volta.`)) return
+    const liq = sale.total - (sale.desconto ?? 0)
+    if (!confirm(`Apagar esta venda de ${fmt(sale.total)} (líquido ${fmt(liq)})? O estoque dos produtos volta.`)) return
     try {
       await deleteSale(sale.id)
       toast.success('Venda apagada — estoque devolvido')
@@ -160,7 +165,16 @@ export default function VendasPage() {
                     )}
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="font-bold text-success text-lg">{fmt(sale.total)}</span>
+                    <div className="text-right">
+                      {sale.desconto ? (
+                        <>
+                          <span className="font-bold text-success text-lg">{fmt(sale.total - sale.desconto)}</span>
+                          <p className="text-[11px] text-danger">-{fmt(sale.desconto)} desconto</p>
+                        </>
+                      ) : (
+                        <span className="font-bold text-success text-lg">{fmt(sale.total)}</span>
+                      )}
+                    </div>
                     <button
                       type="button"
                       onClick={() => handleDelete(sale)}
@@ -195,11 +209,25 @@ export default function VendasPage() {
             <p className="text-xs font-semibold uppercase tracking-widest text-muted mb-2">
               Produtos <span className="normal-case font-normal text-subtle tracking-normal">· toque para adicionar</span>
             </p>
-            {activeProducts.length === 0 ? (
-              <p className="text-sm text-muted py-4 text-center">Nenhum produto cadastrado.</p>
-            ) : (
+            <Input
+              placeholder="Buscar produto…"
+              value={produtoBusca}
+              onChange={e => setProdutoBusca(e.target.value)}
+              className="mb-2"
+            />
+            {(() => {
+              const filtered = activeProducts.filter(p =>
+                p.name.toLowerCase().includes(produtoBusca.trim().toLowerCase())
+              )
+              if (activeProducts.length === 0) {
+                return <p className="text-sm text-muted py-4 text-center">Nenhum produto cadastrado.</p>
+              }
+              if (filtered.length === 0) {
+                return <p className="text-sm text-muted py-4 text-center">Nenhum produto encontrado.</p>
+              }
+              return (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {activeProducts.map(p => {
+                {filtered.map(p => {
                   const inCart = items.find(i => i.productId === p.id)
                   const out = p.quantity === 0
                   return (
@@ -229,7 +257,8 @@ export default function VendasPage() {
                   )
                 })}
               </div>
-            )}
+            )
+            })()}
           </div>
 
           {/* Carrinho */}
@@ -267,6 +296,39 @@ export default function VendasPage() {
             </div>
           )}
 
+          {/* Desconto no total */}
+          <div className="flex items-end gap-2">
+            <Input
+              type="number"
+              label="Desconto (R$)"
+              value={desconto === 0 ? '' : String(desconto)}
+              onChange={e => {
+                const raw = e.target.value
+                const v = raw === '' ? 0 : Math.max(0, Math.min(Number(raw), total))
+                setDesconto(isNaN(v) ? 0 : v)
+              }}
+              placeholder="0,00"
+              min={0}
+              className="flex-1"
+            />
+          </div>
+          {desconto > 0 && (
+            <div className="space-y-0.5 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted">Subtotal</span>
+                <span className="text-ink font-medium">{fmt(total)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-danger">Desconto</span>
+                <span className="text-danger font-medium">- {fmt(desconto)}</span>
+              </div>
+              <div className="flex justify-between border-t border-line pt-1">
+                <span className="text-muted font-semibold">Total a pagar</span>
+                <span className="text-success font-bold text-lg">{fmt(total - desconto)}</span>
+              </div>
+            </div>
+          )}
+
           {/* Cliente (opcional) */}
           <Select
             label="Cliente (opcional)"
@@ -300,7 +362,7 @@ export default function VendasPage() {
           <div className="flex gap-3">
             <Button variant="primary" onClick={handleSave} loading={saving} className="flex-1" disabled={items.length === 0}>
               <Wallet size={16} />
-              Registrar {fmt(total)}
+              Registrar {fmt(total - desconto)}
             </Button>
             <Button variant="secondary" onClick={() => setModal(false)} className="flex-1">
               Cancelar

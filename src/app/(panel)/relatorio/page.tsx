@@ -83,6 +83,7 @@ export default function RelatorioPage() {
         ownerId: row.owner_id,
         items: row.items,
         total: row.total,
+        desconto: row.desconto ?? 0,
         paymentMethod: row.payment_method,
         notes: row.notes,
         createdAt: row.created_at,
@@ -106,7 +107,7 @@ export default function RelatorioPage() {
   const cancelledBookings = bookings.filter(b => b.status === 'cancelado')
 
   const bookingRevenue = activeBookings.reduce((s, b) => s + b.value, 0)
-  const salesRevenue = sales.reduce((s, v) => s + v.total, 0)
+  const salesRevenue = sales.reduce((s, v) => s + v.total - (v.desconto ?? 0), 0)
   const totalRevenue = bookingRevenue + salesRevenue
 
   // Custo e lucro dos produtos (comanda/bar)
@@ -133,7 +134,7 @@ export default function RelatorioPage() {
   const byPayment: Record<string, number> = {}
   for (const s of sales) {
     const pm = s.paymentMethod || 'outro'
-    byPayment[pm] = (byPayment[pm] || 0) + s.total
+    byPayment[pm] = (byPayment[pm] || 0) + s.total - (s.desconto ?? 0)
   }
 
   // Receita por dia (últimos dias do mês)
@@ -144,7 +145,7 @@ export default function RelatorioPage() {
   for (const s of sales) {
     if (!s.createdAt) continue
     const key = format(new Date(s.createdAt), 'yyyy-MM-dd')
-    dailyRevenue[key] = (dailyRevenue[key] || 0) + s.total
+    dailyRevenue[key] = (dailyRevenue[key] || 0) + s.total - (s.desconto ?? 0)
   }
 
   const isNextDisabled = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1) > new Date()

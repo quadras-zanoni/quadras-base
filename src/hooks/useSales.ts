@@ -12,6 +12,7 @@ function mapSale(row: Record<string, unknown>): Sale {
     clientName: row.client_name as string | undefined,
     items: row.items as SaleItem[],
     total: row.total as number,
+    desconto: (row.desconto as number) ?? 0,
     paymentMethod: row.payment_method as Sale['paymentMethod'],
     notes: row.notes as string | undefined,
     createdAt: row.created_at as string,
@@ -48,10 +49,11 @@ export function useSales() {
     paymentMethod: Sale['paymentMethod'],
     notes?: string,
     clientId?: string,
-    clientName?: string
+    clientName?: string,
+    desconto = 0
   ) {
     if (!user) return
-    const { error } = await supabase.rpc('register_sale', {
+    const { data, error } = await supabase.rpc('register_sale', {
       p_items: items,
       p_payment_method: paymentMethod,
       p_notes: notes || '',
@@ -59,6 +61,16 @@ export function useSales() {
       p_client_name: clientName ?? null,
     })
     if (error) throw error
+    if (desconto > 0 && data) {
+      const { error: upErr } = await supabase
+        .from('sales')
+        .update({ desconto, updated_at: new Date().toISOString() })
+        .eq('id', data as string)
+      if (upErr) {
+        console.error('[useSales] erro ao gravar desconto (venda já salva):', upErr)
+        // não reverte a venda — o desconto falha mas a venda está registrada
+      }
+    }
     await load()
   }
 
@@ -75,7 +87,7 @@ export function useSales() {
     return format(new Date(s.createdAt), 'yyyy-MM-dd') === today
   })
 
-  const todayRevenue = todaySales.reduce((sum, s) => sum + s.total, 0)
+  const todayRevenue = todaySales.reduce((sum, s) => sum + s.total - (s.desconto ?? 0), 0)
 
   return { sales, loading, registerSale, deleteSale, todaySales, todayRevenue }
 }

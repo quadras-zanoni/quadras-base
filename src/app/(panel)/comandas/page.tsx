@@ -23,7 +23,7 @@ export default function ComandasPage() {
   const { user } = useAuth()
   const {
     comandas, loading, openComanda, setHorario,
-    addItem, removeItem, closeComanda, cancelComanda,
+    addItem, removeItem, closeComanda, cancelComanda, setDescontoComanda,
   } = useComandas()
   const { products } = useProducts()
   const { clients } = useClients()
@@ -66,7 +66,7 @@ export default function ComandasPage() {
       try {
         const id = await openComanda(cid, cname, bookingId)
         if (!id) return
-        if (horario && Number(horario) > 0) await setHorario(id, Number(horario))
+        if (horario && Number(horario) > 0) await setHorario(id, Number(horario), 1)
         setSelectedId(id)
       } catch {
         toast.error('Não foi possível abrir a comanda da reserva')
@@ -221,6 +221,7 @@ export default function ComandasPage() {
           addItem={addItem}
           removeItem={removeItem}
           setHorario={setHorario}
+          setDescontoComanda={setDescontoComanda}
           closeComanda={closeComanda}
           cancelComanda={cancelComanda}
         />
