@@ -105,5 +105,11 @@ export function useClients() {
     return created?.id as string
   }
 
-  return { clients, loading, upsertClient, updateClient, addClient }
+  async function deleteClient(id: string) {
+    const { error } = await supabase.from('clients').delete().eq('id', id)
+    if (error) throw error
+    await load()
+  }
+
+  return { clients, loading, upsertClient, updateClient, addClient, deleteClient }
 }

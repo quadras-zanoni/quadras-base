@@ -14,6 +14,7 @@ function mapComanda(row: Record<string, unknown>): Sale {
     clientName: row.client_name as string | undefined,
     items: (row.items as SaleItem[]) ?? [],
     total: row.total as number,
+    desconto: (row.desconto as number) ?? 0,
     paymentMethod: row.payment_method as Sale['paymentMethod'],
     notes: row.notes as string | undefined,
     createdAt: row.created_at as string,
@@ -97,7 +98,8 @@ export function useComandas() {
   // Define/atualiza a linha do horário (app-side, owner-only, sem concorrência).
   // Lê os items direto do banco por id para não depender do estado em memória
   // (evita closure velha no fluxo de auto-abrir vindo da agenda).
-  async function setHorario(comandaId: string, value: number, label = 'Horário') {
+  async function setHorario(comandaId: string, valorUnit: number, quantity: number, label = 'Horário') {
+    if (quantity < 1) quantity = 1
     const { data, error } = await supabase
       .from('sales')
       .select('items')
@@ -105,7 +107,7 @@ export function useComandas() {
       .single()
     if (error) throw error
     const items: SaleItem[] = (data?.items as SaleItem[]) ?? []
-    const line: SaleItem = { productId: HORARIO_ID, productName: label, quantity: 1, unitPrice: value, total: value }
+    const line: SaleItem = { productId: HORARIO_ID, productName: label, quantity, unitPrice: valorUnit, total: valorUnit * quantity }
     const exists = items.some(i => i.productId === HORARIO_ID)
     const newItems = exists
       ? items.map(i => (i.productId === HORARIO_ID ? line : i))
@@ -155,6 +157,17 @@ export function useComandas() {
     await load()
   }
 
+  // Define o desconto na comanda (app-side, não passa pelas RPCs de estoque).
+  async function setDescontoComanda(comandaId: string, value: number) {
+    if (value < 0) value = 0
+    const { error } = await supabase
+      .from('sales')
+      .update({ desconto: value, updated_at: new Date().toISOString() })
+      .eq('id', comandaId)
+    if (error) throw error
+    await load()
+  }
+
   return {
     comandas,
     loading,
@@ -165,5 +178,6 @@ export function useComandas() {
     setHorario,
     closeComanda,
     cancelComanda,
+    setDescontoComanda,
   }
 }

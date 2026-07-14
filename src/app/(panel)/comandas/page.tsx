@@ -6,10 +6,10 @@ import { useProducts } from '@/hooks/useProducts'
 import { useClients } from '@/hooks/useClients'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/Button'
-import { Input, Select } from '@/components/ui/Input'
+import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { ComandaDetail } from './ComandaDetail'
-import { Receipt, Plus, User, Clock } from 'lucide-react'
+import { Receipt, Plus, User, Clock, ChevronDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -23,7 +23,7 @@ export default function ComandasPage() {
   const { user } = useAuth()
   const {
     comandas, loading, openComanda, setHorario,
-    addItem, removeItem, closeComanda, cancelComanda,
+    addItem, removeItem, closeComanda, cancelComanda, setDescontoComanda,
   } = useComandas()
   const { products } = useProducts()
   const { clients } = useClients()
@@ -34,8 +34,20 @@ export default function ComandasPage() {
   const [clientId, setClientId] = useState('')
   const [avulsoName, setAvulsoName] = useState('')
   const [creating, setCreating] = useState(false)
+  const [clientSearch, setClientSearch] = useState('')
 
   const selected = comandas.find(c => c.id === selectedId) ?? null
+
+  // Comandas com a lista de itens expandida no card (espiar sem abrir a comanda).
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
+  function toggleExpand(id: string) {
+    setExpandedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
 
   // Atalho vindo da agenda: ?bookingId=&clientId=&clientName=&horario=
   const didInit = useRef(false)
@@ -54,7 +66,7 @@ export default function ComandasPage() {
       try {
         const id = await openComanda(cid, cname, bookingId)
         if (!id) return
-        if (horario && Number(horario) > 0) await setHorario(id, Number(horario))
+        if (horario && Number(horario) > 0) await setHorario(id, Number(horario), 1)
         setSelectedId(id)
       } catch {
         toast.error('Não foi possível abrir a comanda da reserva')
@@ -79,6 +91,7 @@ export default function ComandasPage() {
       setOpenModal(false)
       setClientId('')
       setAvulsoName('')
+      setClientSearch('')
     } catch {
       toast.error('Erro ao abrir comanda')
     } finally {
@@ -96,7 +109,7 @@ export default function ComandasPage() {
             {comandas.length} aberta{comandas.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <Button variant="primary" size="md" onClick={() => { setMode('cadastrado'); setOpenModal(true) }}>
+        <Button variant="primary" size="md" onClick={() => { setMode('cadastrado'); setClientSearch(''); setOpenModal(true) }}>
           <Plus size={16} /> Abrir comanda
         </Button>
       </div>
@@ -112,7 +125,7 @@ export default function ComandasPage() {
           </div>
           <p className="text-base font-medium text-ink mb-1">Nenhuma comanda aberta</p>
           <p className="text-sm text-muted mb-4">Abra uma comanda para começar a lançar consumo.</p>
-          <Button variant="primary" size="md" onClick={() => { setMode('cadastrado'); setOpenModal(true) }}>
+          <Button variant="primary" size="md" onClick={() => { setMode('cadastrado'); setClientSearch(''); setOpenModal(true) }}>
             Abrir comanda
           </Button>
         </div>
@@ -120,32 +133,79 @@ export default function ComandasPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {comandas.map(c => {
             const opened = c.openedAt || c.createdAt
+            const expanded = expandedIds.has(c.id)
+            const hasItems = c.items.length > 0
             return (
-              <button
+              <div
                 key={c.id}
-                type="button"
-                onClick={() => setSelectedId(c.id)}
-                className="text-left bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-4 hover:border-brand transition-colors"
+                className="bg-surface border border-line rounded-[var(--radius-card)] shadow-card p-4 hover:border-brand transition-colors"
               >
-                <div className="flex items-center gap-2 mb-3">
+                {/* Nome — abre a comanda */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedId(c.id)}
+                  className="w-full text-left flex items-center gap-2 mb-3"
+                >
                   <span className="w-8 h-8 rounded-full bg-brand-weak text-brand flex items-center justify-center shrink-0">
                     <User size={15} />
                   </span>
                   <span className="font-semibold text-ink truncate">{c.clientName || 'Avulsa'}</span>
-                </div>
+                </button>
+
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted">
+                  {/* Itens — toque expande a lista aqui mesmo, sem abrir a comanda */}
+                  <button
+                    type="button"
+                    onClick={() => toggleExpand(c.id)}
+                    disabled={!hasItems}
+                    aria-expanded={expanded}
+                    className="flex items-center gap-1 text-xs text-muted hover:text-ink transition-colors disabled:hover:text-muted disabled:opacity-60"
+                  >
                     {c.items.length} {c.items.length === 1 ? 'item' : 'itens'}
-                  </span>
-                  <span className="font-bold text-success text-lg">{fmt(c.total)}</span>
+                    {hasItems && (
+                      <ChevronDown
+                        size={13}
+                        className={clsx('transition-transform', expanded && 'rotate-180')}
+                      />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(c.id)}
+                    className="font-bold text-success text-lg hover:opacity-80 transition-opacity"
+                  >
+                    {fmt(c.total)}
+                  </button>
                 </div>
+
+                {/* Lista de itens (só espiar) */}
+                {expanded && hasItems && (
+                  <ul className="mt-3 pt-3 border-t border-line space-y-1.5">
+                    {c.items.map(item => (
+                      <li
+                        key={item.productId || 'horario'}
+                        className="flex items-center justify-between gap-2 text-xs"
+                      >
+                        <span className="text-ink truncate">
+                          {item.quantity}x {item.productName}
+                        </span>
+                        <span className="text-muted shrink-0 tabular-nums">{fmt(item.total)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
                 {opened && (
-                  <p className="flex items-center gap-1 text-[11px] text-subtle mt-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedId(c.id)}
+                    className="w-full text-left flex items-center gap-1 text-[11px] text-subtle mt-2"
+                  >
                     <Clock size={11} />
                     aberta {formatDistanceToNow(new Date(opened), { locale: ptBR, addSuffix: true })}
-                  </p>
+                  </button>
                 )}
-              </button>
+              </div>
             )
           })}
         </div>
@@ -161,13 +221,14 @@ export default function ComandasPage() {
           addItem={addItem}
           removeItem={removeItem}
           setHorario={setHorario}
+          setDescontoComanda={setDescontoComanda}
           closeComanda={closeComanda}
           cancelComanda={cancelComanda}
         />
       )}
 
       {/* Abrir comanda */}
-      <Modal open={openModal} onClose={() => setOpenModal(false)} title="Abrir comanda">
+      <Modal open={openModal} onClose={() => { setOpenModal(false); setClientSearch('') }} title="Abrir comanda">
         <div className="space-y-5">
           {/* Toggle cadastrado / avulso */}
           <div className="flex items-center gap-1 bg-surface-2 rounded-[var(--radius-ctl)] p-1">
@@ -175,7 +236,7 @@ export default function ComandasPage() {
               <button
                 key={m}
                 type="button"
-                onClick={() => setMode(m)}
+                onClick={() => { setMode(m); setClientSearch('') }}
                 className={clsx(
                   'flex-1 px-3 py-1.5 rounded-[var(--radius-ctl)] text-sm font-medium transition-colors',
                   mode === m ? 'bg-surface shadow-sm text-ink' : 'text-muted hover:text-ink'
@@ -187,12 +248,50 @@ export default function ComandasPage() {
           </div>
 
           {mode === 'cadastrado' ? (
-            <Select label="Cliente" value={clientId} onChange={e => setClientId(e.target.value)}>
-              <option value="">Selecione…</option>
-              {clients.map(c => (
-                <option key={c.id} value={c.id}>{c.name} – {c.phone}</option>
-              ))}
-            </Select>
+            (() => {
+              const selectedClient = clients.find(c => c.id === clientId)
+              if (selectedClient) {
+                return (
+                  <div className="bg-surface-2 rounded-[var(--radius-ctl)] px-3 py-2 flex items-center justify-between">
+                    <div className="min-w-0">
+                      <p className="font-medium text-ink truncate">{selectedClient.name}</p>
+                      <p className="text-xs text-muted">{selectedClient.phone}</p>
+                    </div>
+                    <Button size="sm" variant="ghost" onClick={() => setClientId('')}>Trocar</Button>
+                  </div>
+                )
+              }
+              const filtered = clients
+                .filter(c => c.name.toLowerCase().includes(clientSearch.toLowerCase()) || c.phone.includes(clientSearch))
+                .slice(0, 8)
+              return (
+                <div className="space-y-2">
+                  <Input
+                    label="Cliente"
+                    placeholder="Buscar por nome ou telefone…"
+                    value={clientSearch}
+                    onChange={e => setClientSearch(e.target.value)}
+                  />
+                  {filtered.length === 0 ? (
+                    <p className="text-sm text-muted text-center py-3">Nenhum cliente encontrado</p>
+                  ) : (
+                    <div className="border border-line rounded-[var(--radius-ctl)] divide-y divide-line max-h-52 overflow-y-auto">
+                      {filtered.map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => { setClientId(c.id); setClientSearch('') }}
+                          className="w-full text-left px-3 py-2 hover:bg-surface-2 flex flex-col"
+                        >
+                          <span className="text-sm font-medium text-ink">{c.name}</span>
+                          <span className="text-xs text-muted">{c.phone}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })()
           ) : (
             <Input
               label="Nome (avulso)"

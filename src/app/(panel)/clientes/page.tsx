@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { Badge, statusBadge } from '@/components/ui/Badge'
 import { Client, Booking } from '@/types'
-import { Users, Phone, Calendar, Search, Edit, History, MessageCircle, UserPlus, TrendingUp } from 'lucide-react'
+import { Users, Phone, Calendar, Search, Edit, History, MessageCircle, UserPlus, TrendingUp, Trash2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -34,7 +34,7 @@ function normalizePhone(raw: string): string {
 
 export default function ClientesPage() {
   const { user } = useAuth()
-  const { clients, loading, updateClient, addClient } = useClients()
+  const { clients, loading, updateClient, addClient, deleteClient } = useClients()
   const { bookings } = useBookings()
   const { sales } = useSales()
   const [search, setSearch] = useState('')
@@ -54,6 +54,9 @@ export default function ClientesPage() {
   const [historyModal, setHistoryModal] = useState<Client | null>(null)
   const [history, setHistory] = useState<Booking[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
+
+  const [deleteModal, setDeleteModal] = useState<Client | null>(null)
+  const [deleting, setDeleting] = useState(false)
 
   // ── Agrega total gasto por cliente (bookings não-cancelados + vendas) ──────
   const spendByClientId = useMemo(() => {
@@ -175,6 +178,20 @@ export default function ClientesPage() {
     }
   }
 
+  async function handleDelete() {
+    if (!deleteModal) return
+    setDeleting(true)
+    try {
+      await deleteClient(deleteModal.id)
+      toast.success('Cliente excluído')
+      setDeleteModal(null)
+    } catch {
+      toast.error('Erro ao excluir cliente')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   const totalRevenue = history
     .filter(b => b.status !== 'cancelado')
     .reduce((s, b) => s + b.value, 0)
@@ -277,6 +294,9 @@ export default function ClientesPage() {
                 <Button size="sm" variant="ghost" onClick={() => openEdit(client)} title="Editar">
                   <Edit size={15} />
                 </Button>
+                <Button size="sm" variant="ghost" onClick={() => setDeleteModal(client)} title="Excluir">
+                  <Trash2 size={15} className="text-danger" />
+                </Button>
               </div>
             </div>
             )
@@ -377,6 +397,19 @@ export default function ClientesPage() {
           <div className="flex gap-3">
             <Button onClick={handleNewClient} loading={newSaving} className="flex-1">Cadastrar</Button>
             <Button variant="secondary" onClick={() => setNewModal(false)} className="flex-1">Cancelar</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Modal exclusão */}
+      <Modal open={!!deleteModal} onClose={() => setDeleteModal(null)} title="Excluir cliente">
+        <div className="space-y-4">
+          <p className="text-sm text-muted">
+            Tem certeza que quer excluir <span className="font-semibold text-ink">{deleteModal?.name}</span>? Os agendamentos e vendas já feitos são preservados no histórico.
+          </p>
+          <div className="flex gap-3">
+            <Button variant="danger" onClick={handleDelete} loading={deleting} className="flex-1">Excluir</Button>
+            <Button variant="secondary" onClick={() => setDeleteModal(null)} className="flex-1">Cancelar</Button>
           </div>
         </div>
       </Modal>
