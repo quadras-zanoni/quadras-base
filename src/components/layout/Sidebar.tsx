@@ -12,6 +12,7 @@ import {
 import { useState } from 'react'
 import { clsx } from 'clsx'
 import { BrandMark } from '@/components/BrandMark'
+import { useBrand } from '@/contexts/BrandContext'
 
 const navItems = [
   { href: '/dashboard',         label: 'Dashboard',        icon: LayoutDashboard },
@@ -114,6 +115,7 @@ function SidebarContent({ onLinkClick }: { onLinkClick?: () => void }) {
 export function Sidebar() {
   const pendingCount = usePendingCount()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const brand = useBrand()
 
   return (
     <>
@@ -127,7 +129,7 @@ export function Sidebar() {
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <BrandMark className="h-7 w-7 object-contain shrink-0" compact />
-          <span className="font-bold text-ink text-sm tracking-tight">ARENA DO PARQUE</span>
+          <span className="font-bold text-ink text-sm tracking-tight">{brand.name.toUpperCase()}</span>
         </div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}

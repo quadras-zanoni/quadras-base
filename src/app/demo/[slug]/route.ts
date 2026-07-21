@@ -11,20 +11,24 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
 
   const { slug } = await params
   const hubUrl = process.env.BILLING_HUB_URL
+  // Falha ao vestir a marca → segue pro /demo/start (demo genérica, ainda logada).
+  // NUNCA /login: o middleware reconduz /login pra cá e viraria loop de redirect.
   if (!hubUrl) {
-    return NextResponse.redirect(new URL('/login', req.url))
+    return NextResponse.redirect(new URL('/demo/start', req.url))
   }
 
   let brand: { name?: string; color?: string | null; logo?: string | null }
   try {
     const res = await fetch(`${hubUrl}/api/demo/${encodeURIComponent(slug)}`, { cache: 'no-store' })
-    if (!res.ok) return NextResponse.redirect(new URL('/login', req.url))
+    if (!res.ok) return NextResponse.redirect(new URL('/demo/start', req.url))
     brand = await res.json()
   } catch {
-    return NextResponse.redirect(new URL('/login', req.url))
+    return NextResponse.redirect(new URL('/demo/start', req.url))
   }
 
   const jar = await cookies()
+  // 30 dias: o prospect volta na demo dias depois e ela ainda tá vestida (1h expirava no meio do uso)
+  const MAX_AGE = 60 * 60 * 24 * 30
   jar.set(
     'demo_brand',
     JSON.stringify({
@@ -32,8 +36,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ slug: st
       color: brand.color ?? null,
       logo: brand.logo ?? null,
     }),
-    { httpOnly: true, sameSite: 'lax', path: '/', maxAge: 3600 }
+    { httpOnly: true, sameSite: 'lax', path: '/', maxAge: MAX_AGE }
   )
+  // Lembra qual demo a pessoa abriu — o middleware usa pra reconduzir raiz/login pra ela
+  jar.set('demo_slug', slug, { httpOnly: true, sameSite: 'lax', path: '/', maxAge: MAX_AGE })
 
   return NextResponse.redirect(new URL('/demo/start', req.url))
 }

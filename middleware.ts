@@ -20,6 +20,15 @@ const BYPASS_PATHS = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  // Demo vestida: raiz e login nunca são beco sem saída — reconduzem pra entrada da demo.
+  // demo_slug lembra qual demo a pessoa abriu (cookie de /demo/[slug]); fallback DEMO_DEFAULT_SLUG.
+  if (process.env.DEMO_MODE === '1' && (pathname === '/' || pathname === '/login')) {
+    const slug = request.cookies.get('demo_slug')?.value || process.env.DEMO_DEFAULT_SLUG
+    if (slug && /^[a-z0-9-]{1,40}$/i.test(slug)) {
+      return NextResponse.redirect(new URL(`/demo/${slug}`, request.url))
+    }
+  }
+
   // Sem billing configurado: fail open
   if (!BILLING_HUB_URL || !BILLING_TENANT_KEY) return NextResponse.next()
 
